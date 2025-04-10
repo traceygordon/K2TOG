@@ -47,6 +47,9 @@ Make sure when you go back to VS Code, you checkout the main branch again and pu
 You can then checkout/make a new branch to add your next feature. 
 
 
+Figma Visual Map: https://www.figma.com/board/aPLtMYSOYm0kabTPE3yYRR/Yarn-Market-Place-Visual-Map?node-id=2-145&t=eatbqABNQZhdW4hP-1
+
+
 MVP:
 -
 
