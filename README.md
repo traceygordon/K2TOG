@@ -6,6 +6,17 @@
 
 A full-stack, yarn-focused marketplace web app inspired by Facebook Marketplace. Built collaboratively by a team of developers, the platform empowers users to list, browse, favorite, and negotiate yarn-related items such as yarn, notions, and finished handmade goods.
 
+## Table of Contents
+-[Features](#features)
+-[Tech Stack](#techstack)
+-[Project Structure](#project-structure)
+-[Collaboration](#collaboration)
+-[Status](#status)
+-[Links](#links)
+-[Making Edits](#making-edits)
+-[Roadmap of Features](#roadmap-of-features)
+
+
 ---
 
 ## 🚀 Features
@@ -67,7 +78,8 @@ Check back soon for a live demo link and deployment info.
 
 ---
 
-General instructions for making edits: 
+## Making Edits
+
 Clone the Repository using the SSH:
 + git clone [SSH Key Link]
 
@@ -117,6 +129,7 @@ You can then checkout/make a new branch to add your next feature.
 
 Figma Visual Map: https://www.figma.com/board/aPLtMYSOYm0kabTPE3yYRR/Yarn-Market-Place-Visual-Map?node-id=2-145&t=eatbqABNQZhdW4hP-1
 
+## Roadmap of Features
 
 MVP:
 -
