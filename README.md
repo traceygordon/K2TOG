@@ -7,14 +7,14 @@
 A full-stack, yarn-focused marketplace web app inspired by Facebook Marketplace. Built collaboratively by a team of developers, the platform empowers users to list, browse, favorite, and negotiate yarn-related items such as yarn, notions, and finished handmade goods.
 
 ## Table of Contents
--[Features](#features)
--[Tech Stack](#techstack)
--[Project Structure](#project-structure)
--[Collaboration](#collaboration)
--[Status](#status)
--[Links](#links)
--[Making Edits](#making-edits)
--[Roadmap of Features](#roadmap-of-features)
+- [Features](#features)
+- [Tech Stack](#techstack)
+- [Project Structure](#project-structure)
+- [Collaboration](#collaboration)
+- [Status](#status)
+- [Links](#links)
+- [Making Edits](#making-edits)
+- [Roadmap of Features](#roadmap-of-features)
 
 
 ---
