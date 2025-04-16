@@ -1,4 +1,72 @@
 # K2TOG: 
+
+# 🧶 Yarn Marketplace
+
+**In Progress – Estimated Completion: May 2025**
+
+A full-stack, yarn-focused marketplace web app inspired by Facebook Marketplace. Built collaboratively by a team of developers, the platform empowers users to list, browse, favorite, and negotiate yarn-related items such as yarn, notions, and finished handmade goods.
+
+---
+
+## 🚀 Features
+
+- 🧵 **Multi-type Listings**  
+  Support for yarn, notions, and finished objects through a normalized relational schema and unified listing system.
+
+- 💬 **Messaging System**  
+  Users can send and receive messages within dedicated conversation threads to negotiate pricing and coordinate transactions.
+
+- 🔖 **Tagging & Filtering**  
+  A custom tag system allows users to search and filter listings by fiber type, color, category, and more.
+
+- 🌟 **Favorites & Ratings**  
+  Logged-in users can favorite listings and leave ratings after completed orders.
+
+- 📦 **Full CRUD Functionality**  
+  Includes routes for creating, reading, updating, and deleting listings, user data, tags, favorites, orders, and messages.
+
+- 📱 **Responsive Design**  
+  Built with mobile-first design principles for seamless use across devices.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** React, React Router, CSS, JavaScript  
+- **Backend:** Node.js, Express.js  
+- **Database:** PostgreSQL  
+- **Other:** RESTful APIs, GitHub for version control and collaboration
+
+---
+
+## 🧩 Project Structure
+
+- `/client` – Frontend React application  
+- `/server` – Backend Express server and PostgreSQL database logic  
+- `/models` – Data models for users, listings, messages, ratings, etc.
+
+---
+
+## 👥 Collaboration
+
+This project is being developed as part of a group effort to practice full-stack development and collaborative Git workflows. Contributions are tracked using GitHub branches, pull requests, and issues.
+
+---
+
+## 📅 Status
+
+**Current Phase:** Development  
+**Estimated Completion:** May 2025  
+Check back soon for a live demo link and deployment info.
+
+---
+
+## 🔗 Links
+
+- [Live Deployment (Coming Soon)](#)
+
+---
+
 General instructions for making edits: 
 Clone the Repository using the SSH:
 + git clone [SSH Key Link]
