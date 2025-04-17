@@ -13,11 +13,12 @@ module.exports = pool;
 
 // .env file:
 // Create own .env file and add the following:
+
 // DB_USER=postgres
 // DB_PASSWORD=postgres
 // DB_HOST=localhost
 // DB_PORT=5432
-// DB_NAME=acme_classes_db
+// DB_NAME=acme_marketplace_db
 // PORT=5000
 // JWT_SECRET=shhh
 

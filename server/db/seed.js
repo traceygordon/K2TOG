@@ -1,162 +1,513 @@
-//Drop existing tables
+/**
+ * Database Seeding Script
+ * This script handles the creation and population of the database with initial data.
+ * It includes functions for dropping tables, creating tables, and seeding initial data.
+ */
+
+// Import the database connection pool from the config file
+// This pool manages multiple connections to the database efficiently
+const pool = require('./config/db');
+
+/**
+ * Drops all existing tables in the database
+ * This ensures a clean slate before creating new tables
+ * Tables are dropped in reverse order of dependencies to avoid foreign key constraint errors
+ */
 async function dropTables() {
   try {
+    // Log the start of table dropping process
     console.log("Dropping existing tables...");
-    await client.query(`
-            DROP TABLE IF EXISTS messages CASCADE;
-            DROP TABLE IF EXISTS msg_thread CASCADE;
-            DROP TABLE IF EXISTS listing_tags CASCADE;
-            DROP TABLE IF EXISTS tags CASCADE;
-            DROP TABLE IF EXISTS favorites CASCADE;
-            DROP TABLE IF EXISTS ratings CASCADE;
-            DROP TABLE IF EXISTS orders CASCADE;
-            DROP TABLE IF EXISTS finished_objects CASCADE;
-            DROP TABLE IF EXISTS notions CASCADE;
-            DROP TABLE IF EXISTS yarn CASCADE;
-            DROP TABLE IF EXISTS listings CASCADE;
-            DROP TABLE IF EXISTS users CASCADE;
+    
+    // Execute SQL query to drop all tables
+    // CASCADE ensures that dependent objects are also dropped
+    // Tables are dropped in reverse order of dependencies
+    await pool.query(`
+            DROP TABLE IF EXISTS messages CASCADE;        // Drop messages table first as it depends on msg_thread
+            DROP TABLE IF EXISTS msg_thread CASCADE;      // Drop message threads
+            DROP TABLE IF EXISTS listing_tags CASCADE;    // Drop junction table for tags
+            DROP TABLE IF EXISTS tags CASCADE;            // Drop tags table
+            DROP TABLE IF EXISTS favorites CASCADE;       // Drop user favorites
+            DROP TABLE IF EXISTS ratings CASCADE;         // Drop user ratings
+            DROP TABLE IF EXISTS orders CASCADE;          // Drop order records
+            DROP TABLE IF EXISTS finished_objects CASCADE;// Drop finished objects
+            DROP TABLE IF EXISTS notions CASCADE;         // Drop notions
+            DROP TABLE IF EXISTS yarn CASCADE;            // Drop yarn products
+            DROP TABLE IF EXISTS listings CASCADE;        // Drop main listings
+            DROP TABLE IF EXISTS users CASCADE;           // Drop users last as other tables depend on it
         `);
+    // Log successful completion of table dropping
     console.log("Tables dropped successfully");
   } catch (error) {
+    // Log any errors that occur during table dropping
     console.error("Error dropping tables:", error);
+    throw error; // Re-throw the error to be handled by the calling function
+  }
+}
+
+/**
+ * Creates all necessary tables for the application
+ * Tables are created in order of dependencies to ensure foreign key constraints are satisfied
+ * Includes creation of indexes for performance optimization
+ */
+async function createTables() {
+  try {
+    // Log the start of table creation process
+    console.log("Creating tables...");
+    
+    // Execute SQL query to create all tables and indexes
+    await pool.query(`
+        -- Enable UUID extension for generating unique identifiers
+        -- This is useful for generating unique IDs across tables
+        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+        -- Users table: Stores user account information
+        -- This is the base table that other tables reference
+        CREATE TABLE users (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            name VARCHAR(100) NOT NULL,               // User's full name
+            email VARCHAR(255) UNIQUE NOT NULL,       // Unique email address
+            password TEXT NOT NULL,                   // Hashed password
+            profile_pic TEXT,                         // URL to profile picture
+            location VARCHAR(100),                    // User's location
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Yarn table: Stores yarn product information
+        -- Contains specific attributes for yarn products
+        CREATE TABLE yarn (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            pictures TEXT[],                          // Array of image URLs
+            brand VARCHAR(100),                       // Yarn brand name
+            amount INTEGER,                           // Number of skeins/balls
+            length_yards INTEGER,                     // Length in yards
+            length_meters INTEGER,                    // Length in meters
+            weight VARCHAR(50),                       // Yarn weight (fingering, worsted, etc)
+            color VARCHAR(100),                       // Yarn color
+            composition TEXT,                         // Fiber content
+            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), // Condition check
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), // Listing type check
+            price DECIMAL(10, 2),                     // Price with 2 decimal places
+            location VARCHAR(100),                    // Item location
+            user_id INTEGER REFERENCES users(id),     // Foreign key to users table
+            description TEXT,                         // Detailed description
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Notions table: Stores knitting/crochet notion information
+        -- Contains specific attributes for notion products
+        CREATE TABLE notions (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            pictures TEXT[],                          // Array of image URLs
+            name VARCHAR(100),                        // Notion name
+            quantity INTEGER,                         // Number of items
+            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), // Condition check
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), // Listing type check
+            price DECIMAL(10, 2),                     // Price with 2 decimal places
+            location VARCHAR(100),                    // Item location
+            user_id INTEGER REFERENCES users(id),     // Foreign key to users table
+            description TEXT,                         // Detailed description
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Finished objects table: Stores completed knitting/crochet projects
+        -- Contains specific attributes for finished items
+        CREATE TABLE finished_objects (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            pictures TEXT[],                          // Array of image URLs
+            name VARCHAR(100),                        // Item name
+            size VARCHAR(50),                         // Size information
+            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), // Condition check
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), // Listing type check
+            price DECIMAL(10, 2),                     // Price with 2 decimal places
+            location VARCHAR(100),                    // Item location
+            user_id INTEGER REFERENCES users(id),     // Foreign key to users table
+            description TEXT,                         // Detailed description
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Listings table: Main table for all product listings
+        -- Links to specific product types through product_id
+        CREATE TABLE listings (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            seller_id INTEGER REFERENCES users(id),   // Foreign key to seller
+            listing_type VARCHAR(20) CHECK (listing_type IN ('yarn', 'notion', 'finished_object')), // Product type
+            product_id INTEGER NOT NULL,              // ID of the specific product
+            status VARCHAR(20) DEFAULT 'available',   // Listing status
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Message thread table: Stores conversation threads between users
+        -- Links buyers and sellers for specific listings
+        CREATE TABLE msg_thread (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            buyer_id INTEGER REFERENCES users(id),    // Foreign key to buyer
+            seller_id INTEGER REFERENCES users(id),   // Foreign key to seller
+            listing_id INTEGER REFERENCES listings(id), // Foreign key to listing
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Messages table: Stores individual messages within a thread
+        -- Contains the actual message content
+        CREATE TABLE messages (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            conversation_id INTEGER REFERENCES msg_thread(id) ON DELETE CASCADE, // Thread reference
+            sender_id INTEGER REFERENCES users(id),   // Foreign key to sender
+            text TEXT NOT NULL,                       // Message content
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Orders table: Stores completed transactions
+        -- Records successful sales/transactions
+        CREATE TABLE orders (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            listing_id INTEGER REFERENCES listings(id), // Foreign key to listing
+            buyer_id INTEGER REFERENCES users(id),    // Foreign key to buyer
+            seller_id INTEGER REFERENCES users(id),   // Foreign key to seller
+            final_price DECIMAL(10, 2),               // Final transaction price
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            );
+
+        -- Ratings table: Stores user ratings and reviews
+        -- Allows users to rate each other after transactions
+        CREATE TABLE ratings (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            reviewer_id INTEGER REFERENCES users(id), // Foreign key to reviewer
+            reviewee_id INTEGER REFERENCES users(id), // Foreign key to user being reviewed
+            role VARCHAR(10) CHECK (role IN ('buyer', 'seller')), // Role in transaction
+            stars INTEGER CHECK (stars BETWEEN 1 AND 5), // Rating value
+            review TEXT,                              // Review text
+            order_id INTEGER REFERENCES orders(id),   // Foreign key to order
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, // Record creation timestamp
+            UNIQUE (reviewer_id, reviewee_id, order_id) // Prevent duplicate reviews
+            );
+
+        -- Favorites table: Stores user's favorite listings
+        -- Many-to-many relationship between users and listings
+        CREATE TABLE favorites (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, // Foreign key to user
+            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE, // Foreign key to listing
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, // Record creation timestamp
+            UNIQUE (user_id, listing_id)              // Prevent duplicate favorites
+            );
+
+        -- Tags table: Stores available tags for listings
+        -- Contains unique tag names
+        CREATE TABLE tags (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            name VARCHAR(50) UNIQUE NOT NULL          // Unique tag name
+            );
+
+        -- Listing tags table: Junction table for many-to-many relationship
+        -- Links listings to their tags
+        CREATE TABLE listing_tags (
+            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
+            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE, // Foreign key to listing
+            tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE, // Foreign key to tag
+            UNIQUE (listing_id, tag_id)               // Prevent duplicate tag assignments
+            );
+
+        -- Create indexes for frequently queried columns to improve performance
+        -- These indexes speed up common queries
+        CREATE INDEX idx_listings_seller_id ON listings(seller_id);        // Speed up seller queries
+        CREATE INDEX idx_listings_product_id ON listings(product_id);      // Speed up product queries
+        CREATE INDEX idx_messages_conversation_id ON messages(conversation_id); // Speed up message queries
+        CREATE INDEX idx_orders_buyer_id ON orders(buyer_id);              // Speed up buyer order queries
+        CREATE INDEX idx_orders_seller_id ON orders(seller_id);            // Speed up seller order queries
+        CREATE INDEX idx_ratings_reviewee_id ON ratings(reviewee_id);      // Speed up rating queries
+        CREATE INDEX idx_favorites_user_id ON favorites(user_id);          // Speed up favorite queries
+        CREATE INDEX idx_favorites_listing_id ON favorites(listing_id);    // Speed up listing favorite queries
+        CREATE INDEX idx_listing_tags_listing_id ON listing_tags(listing_id); // Speed up tag queries
+        CREATE INDEX idx_listing_tags_tag_id ON listing_tags(tag_id);      // Speed up listing queries by tag
+        `);
+    // Log successful completion of table creation
+    console.log("Table created successfully.");
+  } catch (error) {
+    // Log any errors that occur during table creation
+    console.error("Error creating tables:", error);
+  }
+}
+
+/**
+ * Creates initial users in the database
+ * Seeds the database with sample user data for testing and development
+ */
+async function createInitialUsers() {
+  try {
+    console.log("Creating initial users...");
+    const users = [
+      {
+        name: "Sarah Knits",
+        email: "sarah@example.com",
+        password: "$2b$10$G/M.7zrA8Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0", // hashed "password123"
+        profile_pic: "https://example.com/sarah.jpg",
+        location: "New York, NY"
+      },
+      {
+        name: "Mike Crochets",
+        email: "mike@example.com",
+        password: "$2b$10$G/M.7zrA8Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0", // hashed "password123"
+        profile_pic: "https://example.com/mike.jpg",
+        location: "Los Angeles, CA"
+      },
+      {
+        name: "Emma Yarns",
+        email: "emma@example.com",
+        password: "$2b$10$G/M.7zrA8Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0", // hashed "password123"
+        profile_pic: "https://example.com/emma.jpg",
+        location: "Chicago, IL"
+      }
+    ];
+
+    // Insert each user into the database
+    for (const user of users) {
+      await pool.query(
+        `INSERT INTO users (name, email, password, profile_pic, location) 
+         VALUES ($1, $2, $3, $4, $5)`,
+        [user.name, user.email, user.password, user.profile_pic, user.location]
+      );
+    }
+    console.log("Initial users created successfully");
+  } catch (error) {
+    console.error("Error creating initial users:", error);
     throw error;
   }
 }
 
-//Create new tables
-async function createTables() {
+/**
+ * Creates initial listings in the database
+ * Seeds the database with sample listings for yarn, notions, and finished objects
+ * Randomly assigns listings to users
+ */
+async function createInitialListings() {
   try {
-    console.log("Creating tables...");
-    await client.query(`
-        CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    console.log("Creating initial listings...");
+    
+    // Get all user IDs to randomly assign listings
+    // This query retrieves all user IDs from the database
+    const users = await pool.query('SELECT id FROM users');
+    // Convert the query results into an array of user IDs
+    // users.rows is an array of objects, map() extracts just the id property
+    const userIds = users.rows.map(user => user.id);
 
-        CREATE TABLE users (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            email VARCHAR(255) UNIQUE NOT NULL,
-            password TEXT NOT NULL,
-            profile_pic TEXT,
-            location VARCHAR(100),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+    // Sample yarn listings data
+    const yarnListings = [
+      {
+        brand: "Malabrigo",
+        amount: 2,
+        length_yards: 400,
+        weight: "Worsted",
+        color: "Purple",
+        composition: "100% Merino Wool",
+        quality: "new",
+        type: "sell",
+        price: 25.00,
+        location: "New York, NY",
+        description: "Beautiful hand-dyed merino wool yarn"
+      },
+      {
+        brand: "Lion Brand",
+        amount: 5,
+        length_yards: 300,
+        weight: "DK",
+        color: "Blue",
+        composition: "100% Acrylic",
+        quality: "good",
+        type: "swap",
+        price: 15.00,
+        location: "Los Angeles, CA",
+        description: "Great for baby blankets"
+      }
+    ];
 
-            CREATE TABLE listings (
-            id SERIAL PRIMARY KEY,
-            seller_id INTEGER REFERENCES users(id),
-            listing_type VARCHAR(20) CHECK (listing_type IN ('yarn', 'notion', 'finished_object')),
-            product_id INTEGER, -- will reference yarn/notions/finished_objects based on type
-            status VARCHAR(20) DEFAULT 'available', -- available, sold, archived
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+    // Sample notion listings data
+    const notionListings = [
+      {
+        name: "Circular Needles",
+        quantity: 1,
+        quality: "new",
+        type: "donate",
+        price: 12.00,
+        location: "Chicago, IL",
+        description: "Size 8, 32 inch circular needles"
+      },
+      {
+        name: "Stitch Markers",
+        quantity: 10,
+        quality: "good",
+        type: "donate",
+        price: 0.00,
+        location: "New York, NY",
+        description: "Assorted colors"
+      }
+    ];
 
+    // Sample finished object listings data
+    const finishedObjectListings = [
+      {
+        name: "Hand-knit Scarf",
+        size: "Adult",
+        quality: "new",
+        type: "sell",
+        price: 45.00,
+        location: "Los Angeles, CA",
+        description: "Warm wool scarf in herringbone pattern"
+      },
+      {
+        name: "Crochet Blanket",
+        size: "Baby",
+        quality: "good",
+        type: "swap",
+        price: 30.00,
+        location: "Chicago, IL",
+        description: "Soft baby blanket in pastel colors"
+      }
+    ];
 
-            CREATE TABLE yarn (
-            id SERIAL PRIMARY KEY,
-            pictures TEXT[], -- array of image URLs
-            brand VARCHAR(100),
-            amount INTEGER, -- number of skeins, hanks, or balls
-            length_yards INTEGER,
-            length_meters INTEGER,
-            weight VARCHAR(50), -- fingering, sport, DK, etc
-            color VARCHAR(100),
-            composition TEXT, -- wool, alpaca, etc
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')),
-            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')),
-            price DECIMAL(10, 2),
-            location VARCHAR(100),
-            user_id INTEGER REFERENCES users(id),
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+    // Insert yarn listings and create corresponding entries in the listings table
+    for (const yarn of yarnListings) {
+      const yarnResult = await pool.query(
+        `INSERT INTO yarn (pictures, brand, amount, length_yards, weight, color, 
+                          composition, quality, type, price, location, user_id, description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+         RETURNING id`,
+        [
+          ['https://example.com/yarn1.jpg'],
+          yarn.brand,
+          yarn.amount,
+          yarn.length_yards,
+          yarn.weight,
+          yarn.color,
+          yarn.composition,
+          yarn.quality,
+          yarn.type,
+          yarn.price,
+          yarn.location,
+          // Math.random() generates a random number between 0 and 1
+          // Multiply by userIds.length to get a number between 0 and (length-1)
+          // Math.floor() rounds down to the nearest integer
+          // This gives us a random index into the userIds array
+          userIds[Math.floor(Math.random() * userIds.length)],
+          yarn.description
+        ]
+      );
 
-            CREATE TABLE notions (
-            id SERIAL PRIMARY KEY,
-            pictures TEXT[],
-            name VARCHAR(100),
-            quantity INTEGER,
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')),
-            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')),
-            price DECIMAL(10, 2),
-            location VARCHAR(100),
-            user_id INTEGER REFERENCES users(id),
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+      await pool.query(
+        `INSERT INTO listings (seller_id, listing_type, product_id, status)
+         VALUES ($1, 'yarn', $2, 'available')`,
+        // Again using Math.random() to select a random user as the seller
+        // This ensures listings are distributed randomly among users
+        [userIds[Math.floor(Math.random() * userIds.length)], yarnResult.rows[0].id]
+      );
+    }
 
-            CREATE TABLE finished_objects (
-            id SERIAL PRIMARY KEY,
-            pictures TEXT[],
-            name VARCHAR(100),
-            size VARCHAR(50),
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')),
-            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')),
-            price DECIMAL(10, 2),
-            location VARCHAR(100),
-            user_id INTEGER REFERENCES users(id),
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+    // Insert notion listings and create corresponding entries in the listings table
+    for (const notion of notionListings) {
+      const notionResult = await pool.query(
+        `INSERT INTO notions (pictures, name, quantity, quality, type, price, 
+                            location, user_id, description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id`,
+        [
+          ['https://example.com/notion1.jpg'],
+          notion.name,
+          notion.quantity,
+          notion.quality,
+          notion.type,
+          notion.price,
+          notion.location,
+          // Randomly select a user ID from the array
+          // This distributes notion listings randomly among users
+          userIds[Math.floor(Math.random() * userIds.length)],
+          notion.description
+        ]
+      );
 
-            CREATE TABLE msg_thread (
-            id SERIAL PRIMARY KEY,
-            buyer_id INTEGER REFERENCES users(id),
-            seller_id INTEGER REFERENCES users(id),
-            listing_id INTEGER REFERENCES listings(id),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+      await pool.query(
+        `INSERT INTO listings (seller_id, listing_type, product_id, status)
+         VALUES ($1, 'notion', $2, 'available')`,
+        // Randomly assign a seller for this notion listing
+        // This could be the same or different from the user_id above
+        [userIds[Math.floor(Math.random() * userIds.length)], notionResult.rows[0].id]
+      );
+    }
 
-            CREATE TABLE messages (
-            id SERIAL PRIMARY KEY,
-            conversation_id INTEGER REFERENCES msg_thread(id) ON DELETE CASCADE,
-            sender_id INTEGER REFERENCES users(id),
-            text TEXT NOT NULL,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+    // Insert finished object listings and create corresponding entries in the listings table
+    for (const finishedObject of finishedObjectListings) {
+      const finishedObjectResult = await pool.query(
+        `INSERT INTO finished_objects (pictures, name, size, quality, type, price, 
+                                     location, user_id, description)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING id`,
+        [
+          ['https://example.com/finished1.jpg'],
+          finishedObject.name,
+          finishedObject.size,
+          finishedObject.quality,
+          finishedObject.type,
+          finishedObject.price,
+          finishedObject.location,
+          // Randomly select a user to own this finished object
+          // This creates a realistic distribution of items among users
+          userIds[Math.floor(Math.random() * userIds.length)],
+          finishedObject.description
+        ]
+      );
 
-            CREATE TABLE orders (
-            id SERIAL PRIMARY KEY,
-            listing_id INTEGER REFERENCES listings(id),
-            buyer_id INTEGER REFERENCES users(id),
-            seller_id INTEGER REFERENCES users(id),
-            final_price DECIMAL(10, 2),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            );
+      await pool.query(
+        `INSERT INTO listings (seller_id, listing_type, product_id, status)
+         VALUES ($1, 'finished_object', $2, 'available')`,
+        // Randomly assign a seller for this finished object listing
+        // Note: The seller could be different from the user_id above,
+        // allowing for scenarios where users sell items on behalf of others
+        [userIds[Math.floor(Math.random() * userIds.length)], finishedObjectResult.rows[0].id]
+      );
+    }
 
-            CREATE TABLE ratings (
-            id SERIAL PRIMARY KEY,
-            reviewer_id INTEGER REFERENCES users(id),
-            reviewee_id INTEGER REFERENCES users(id),
-            role VARCHAR(10) CHECK (role IN ('buyer', 'seller')), -- who is being rated
-            stars INTEGER CHECK (stars BETWEEN 1 AND 5),
-            review TEXT,
-            order_id INTEGER REFERENCES orders(id),
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (reviewer_id, reviewee_id, order_id) -- prevent duplicates
-            );
-
-
-            CREATE TABLE favorites (
-            id SERIAL PRIMARY KEY,
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE (user_id, listing_id) -- prevent duplicates
-            );
-
-            CREATE TABLE tags (
-            id SERIAL PRIMARY KEY,
-            name VARCHAR(50) UNIQUE NOT NULL
-            );
-
-            CREATE TABLE listing_tags (
-            id SERIAL PRIMARY KEY,
-            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE,
-            tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE,
-            UNIQUE (listing_id, tag_id) -- prevent duplicate tagging
-            );
-        `);
-    console.log("Table created successfully.");
+    console.log("Initial listings created successfully");
   } catch (error) {
-    console.error("Error creating tables:", error);
+    console.error("Error creating initial listings:", error);
+    throw error;
   }
 }
+
+/**
+ * Rebuilds the entire database
+ * Drops existing tables, creates new tables, and seeds initial data
+ */
+async function rebuildDB() {
+  try {
+    console.log("🔸 Rebuilding database...");
+    await dropTables();
+    await createTables();
+    await createInitialUsers();
+    await createInitialListings();
+    console.log("✅ Database rebuilt successfully.");
+  } catch (error) {
+    console.error("❌ Error rebuilding database:", error);
+    throw error;
+  }
+}
+
+/**
+ * Starts the seeding process
+ * Connects to the database, rebuilds it, and then closes the connection
+ */
+async function start() {
+  try {
+    console.log("🚀 Starting database seeding...");
+    await pool.connect();
+    await rebuildDB();
+  } catch (error) {
+    console.error("❌ Error during seed startup:", error);
+    throw error;
+  } finally {
+    await pool.end();
+    console.log("🔚 Seeding process complete.");
+  }
+}
+
+// Execute the seeding process
+start();
+
+  

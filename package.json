@@ -1,5 +1,36 @@
 {
+  "scripts": {
+    "seed:dev": "nodemon ./server/db/seed.js",
+    "seed": "node ./server/db/seed.js",
+    "start": "node ./server/server.js",
+    "start:dev": "nodemon ./server/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.3"
+  },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^1.41.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.17.1",
+    "jsonwebtoken": "^8.5.1",
+    "nodemailer": "^6.10.0",
+    "pg": "^8.0.3",
+    "uuid": "^9.0.1",
     "vite": "^6.2.4"
-  }
+  },
+  "name": "k2tog",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/traceygordon/K2TOG.git"
+  },
+  "bugs": {
+    "url": "https://github.com/traceygordon/K2TOG/issues"
+  },
+  "homepage": "https://github.com/traceygordon/K2TOG#readme"
 }
