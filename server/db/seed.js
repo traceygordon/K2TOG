@@ -22,18 +22,18 @@ async function dropTables() {
     // CASCADE ensures that dependent objects are also dropped
     // Tables are dropped in reverse order of dependencies
     await pool.query(`
-            DROP TABLE IF EXISTS messages CASCADE;        // Drop messages table first as it depends on msg_thread
-            DROP TABLE IF EXISTS msg_thread CASCADE;      // Drop message threads
-            DROP TABLE IF EXISTS listing_tags CASCADE;    // Drop junction table for tags
-            DROP TABLE IF EXISTS tags CASCADE;            // Drop tags table
-            DROP TABLE IF EXISTS favorites CASCADE;       // Drop user favorites
-            DROP TABLE IF EXISTS ratings CASCADE;         // Drop user ratings
-            DROP TABLE IF EXISTS orders CASCADE;          // Drop order records
-            DROP TABLE IF EXISTS finished_objects CASCADE;// Drop finished objects
-            DROP TABLE IF EXISTS notions CASCADE;         // Drop notions
-            DROP TABLE IF EXISTS yarn CASCADE;            // Drop yarn products
-            DROP TABLE IF EXISTS listings CASCADE;        // Drop main listings
-            DROP TABLE IF EXISTS users CASCADE;           // Drop users last as other tables depend on it
+            DROP TABLE IF EXISTS messages CASCADE;        -- Drop messages table first as it depends on msg_thread
+            DROP TABLE IF EXISTS msg_thread CASCADE;      -- Drop message threads
+            DROP TABLE IF EXISTS listing_tags CASCADE;    -- Drop junction table for tags
+            DROP TABLE IF EXISTS tags CASCADE;            -- Drop tags table
+            DROP TABLE IF EXISTS favorites CASCADE;       -- Drop user favorites
+            DROP TABLE IF EXISTS ratings CASCADE;         -- Drop user ratings
+            DROP TABLE IF EXISTS orders CASCADE;          -- Drop order records
+            DROP TABLE IF EXISTS finished_objects CASCADE;-- Drop finished objects
+            DROP TABLE IF EXISTS notions CASCADE;         -- Drop notions
+            DROP TABLE IF EXISTS yarn CASCADE;            -- Drop yarn products
+            DROP TABLE IF EXISTS listings CASCADE;        -- Drop main listings
+            DROP TABLE IF EXISTS users CASCADE;           -- Drop users last as other tables depend on it
         `);
     // Log successful completion of table dropping
     console.log("Tables dropped successfully");
@@ -63,162 +63,162 @@ async function createTables() {
         -- Users table: Stores user account information
         -- This is the base table that other tables reference
         CREATE TABLE users (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            name VARCHAR(100) NOT NULL,               // User's full name
-            email VARCHAR(255) UNIQUE NOT NULL,       // Unique email address
-            password TEXT NOT NULL,                   // Hashed password
-            profile_pic TEXT,                         // URL to profile picture
-            location VARCHAR(100),                    // User's location
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            name VARCHAR(100) NOT NULL,               -- User's full name
+            email VARCHAR(255) UNIQUE NOT NULL,       -- Unique email address
+            password TEXT NOT NULL,                   -- Hashed password
+            profile_pic TEXT,                         -- URL to profile picture
+            location VARCHAR(100),                    -- User's location
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Yarn table: Stores yarn product information
         -- Contains specific attributes for yarn products
         CREATE TABLE yarn (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            pictures TEXT[],                          // Array of image URLs
-            brand VARCHAR(100),                       // Yarn brand name
-            amount INTEGER,                           // Number of skeins/balls
-            length_yards INTEGER,                     // Length in yards
-            length_meters INTEGER,                    // Length in meters
-            weight VARCHAR(50),                       // Yarn weight (fingering, worsted, etc)
-            color VARCHAR(100),                       // Yarn color
-            composition TEXT,                         // Fiber content
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), // Condition check
-            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), // Listing type check
-            price DECIMAL(10, 2),                     // Price with 2 decimal places
-            location VARCHAR(100),                    // Item location
-            user_id INTEGER REFERENCES users(id),     // Foreign key to users table
-            description TEXT,                         // Detailed description
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            pictures TEXT[],                          -- Array of image URLs
+            brand VARCHAR(100),                       -- Yarn brand name
+            amount INTEGER,                           -- Number of skeins/balls
+            length_yards INTEGER,                     -- Length in yards
+            length_meters INTEGER,                    -- Length in meters
+            weight VARCHAR(50),                       -- Yarn weight (fingering, worsted, etc)
+            color VARCHAR(100),                       -- Yarn color
+            composition TEXT,                         -- Fiber content
+            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), -- Condition check
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type check
+            price DECIMAL(10, 2),                     -- Price with 2 decimal places
+            location VARCHAR(100),                    -- Item location
+            user_id INTEGER REFERENCES users(id),     -- Foreign key to users table
+            description TEXT,                         -- Detailed description
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Notions table: Stores knitting/crochet notion information
         -- Contains specific attributes for notion products
         CREATE TABLE notions (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            pictures TEXT[],                          // Array of image URLs
-            name VARCHAR(100),                        // Notion name
-            quantity INTEGER,                         // Number of items
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), // Condition check
-            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), // Listing type check
-            price DECIMAL(10, 2),                     // Price with 2 decimal places
-            location VARCHAR(100),                    // Item location
-            user_id INTEGER REFERENCES users(id),     // Foreign key to users table
-            description TEXT,                         // Detailed description
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            pictures TEXT[],                          -- Array of image URLs
+            name VARCHAR(100),                        -- Notion name
+            quantity INTEGER,                         -- Number of items
+            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), -- Condition check
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type check
+            price DECIMAL(10, 2),                     -- Price with 2 decimal places
+            location VARCHAR(100),                    -- Item location
+            user_id INTEGER REFERENCES users(id),     -- Foreign key to users table
+            description TEXT,                         -- Detailed description
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Finished objects table: Stores completed knitting/crochet projects
         -- Contains specific attributes for finished items
         CREATE TABLE finished_objects (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            pictures TEXT[],                          // Array of image URLs
-            name VARCHAR(100),                        // Item name
-            size VARCHAR(50),                         // Size information
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), // Condition check
-            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), // Listing type check
-            price DECIMAL(10, 2),                     // Price with 2 decimal places
-            location VARCHAR(100),                    // Item location
-            user_id INTEGER REFERENCES users(id),     // Foreign key to users table
-            description TEXT,                         // Detailed description
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            pictures TEXT[],                          -- Array of image URLs
+            name VARCHAR(100),                        -- Item name
+            size VARCHAR(50),                         -- Size information
+            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), -- Condition check
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type check
+            price DECIMAL(10, 2),                     -- Price with 2 decimal places
+            location VARCHAR(100),                    -- Item location
+            user_id INTEGER REFERENCES users(id),     -- Foreign key to users table
+            description TEXT,                         -- Detailed description
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Listings table: Main table for all product listings
         -- Links to specific product types through product_id
         CREATE TABLE listings (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            seller_id INTEGER REFERENCES users(id),   // Foreign key to seller
-            listing_type VARCHAR(20) CHECK (listing_type IN ('yarn', 'notion', 'finished_object')), // Product type
-            product_id INTEGER NOT NULL,              // ID of the specific product
-            status VARCHAR(20) DEFAULT 'available',   // Listing status
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            seller_id INTEGER REFERENCES users(id),   -- Foreign key to seller
+            listing_type VARCHAR(20) CHECK (listing_type IN ('yarn', 'notion', 'finished_object')), -- Product type
+            product_id INTEGER NOT NULL,              -- ID of the specific product
+            status VARCHAR(20) DEFAULT 'available',   -- Listing status
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Message thread table: Stores conversation threads between users
         -- Links buyers and sellers for specific listings
         CREATE TABLE msg_thread (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            buyer_id INTEGER REFERENCES users(id),    // Foreign key to buyer
-            seller_id INTEGER REFERENCES users(id),   // Foreign key to seller
-            listing_id INTEGER REFERENCES listings(id), // Foreign key to listing
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            buyer_id INTEGER REFERENCES users(id),    -- Foreign key to buyer
+            seller_id INTEGER REFERENCES users(id),   -- Foreign key to seller
+            listing_id INTEGER REFERENCES listings(id), -- Foreign key to listing
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Messages table: Stores individual messages within a thread
         -- Contains the actual message content
         CREATE TABLE messages (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            conversation_id INTEGER REFERENCES msg_thread(id) ON DELETE CASCADE, // Thread reference
-            sender_id INTEGER REFERENCES users(id),   // Foreign key to sender
-            text TEXT NOT NULL,                       // Message content
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            conversation_id INTEGER REFERENCES msg_thread(id) ON DELETE CASCADE, -- Thread reference
+            sender_id INTEGER REFERENCES users(id),   -- Foreign key to sender
+            text TEXT NOT NULL,                       -- Message content
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Orders table: Stores completed transactions
         -- Records successful sales/transactions
         CREATE TABLE orders (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            listing_id INTEGER REFERENCES listings(id), // Foreign key to listing
-            buyer_id INTEGER REFERENCES users(id),    // Foreign key to buyer
-            seller_id INTEGER REFERENCES users(id),   // Foreign key to seller
-            final_price DECIMAL(10, 2),               // Final transaction price
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP // Record creation timestamp
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            listing_id INTEGER REFERENCES listings(id), -- Foreign key to listing
+            buyer_id INTEGER REFERENCES users(id),    -- Foreign key to buyer
+            seller_id INTEGER REFERENCES users(id),   -- Foreign key to seller
+            final_price DECIMAL(10, 2),               -- Final transaction price
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
             );
 
         -- Ratings table: Stores user ratings and reviews
         -- Allows users to rate each other after transactions
         CREATE TABLE ratings (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            reviewer_id INTEGER REFERENCES users(id), // Foreign key to reviewer
-            reviewee_id INTEGER REFERENCES users(id), // Foreign key to user being reviewed
-            role VARCHAR(10) CHECK (role IN ('buyer', 'seller')), // Role in transaction
-            stars INTEGER CHECK (stars BETWEEN 1 AND 5), // Rating value
-            review TEXT,                              // Review text
-            order_id INTEGER REFERENCES orders(id),   // Foreign key to order
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, // Record creation timestamp
-            UNIQUE (reviewer_id, reviewee_id, order_id) // Prevent duplicate reviews
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            reviewer_id INTEGER REFERENCES users(id), -- Foreign key to reviewer
+            reviewee_id INTEGER REFERENCES users(id), -- Foreign key to user being reviewed
+            role VARCHAR(10) CHECK (role IN ('buyer', 'seller')), -- Role in transaction
+            stars INTEGER CHECK (stars BETWEEN 1 AND 5), -- Rating value
+            review TEXT,                              -- Review text
+            order_id INTEGER REFERENCES orders(id),   -- Foreign key to order
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Record creation timestamp
+            UNIQUE (reviewer_id, reviewee_id, order_id) -- Prevent duplicate reviews
             );
 
         -- Favorites table: Stores user's favorite listings
         -- Many-to-many relationship between users and listings
         CREATE TABLE favorites (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, // Foreign key to user
-            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE, // Foreign key to listing
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, // Record creation timestamp
-            UNIQUE (user_id, listing_id)              // Prevent duplicate favorites
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, -- Foreign key to user
+            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE, -- Foreign key to listing
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Record creation timestamp
+            UNIQUE (user_id, listing_id)              -- Prevent duplicate favorites
             );
 
         -- Tags table: Stores available tags for listings
         -- Contains unique tag names
         CREATE TABLE tags (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            name VARCHAR(50) UNIQUE NOT NULL          // Unique tag name
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            name VARCHAR(50) UNIQUE NOT NULL          -- Unique tag name
             );
 
         -- Listing tags table: Junction table for many-to-many relationship
         -- Links listings to their tags
         CREATE TABLE listing_tags (
-            id SERIAL PRIMARY KEY,                    // Auto-incrementing primary key
-            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE, // Foreign key to listing
-            tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE, // Foreign key to tag
-            UNIQUE (listing_id, tag_id)               // Prevent duplicate tag assignments
+            id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
+            listing_id INTEGER REFERENCES listings(id) ON DELETE CASCADE, -- Foreign key to listing
+            tag_id INTEGER REFERENCES tags(id) ON DELETE CASCADE, -- Foreign key to tag
+            UNIQUE (listing_id, tag_id)               -- Prevent duplicate tag assignments
             );
 
         -- Create indexes for frequently queried columns to improve performance
         -- These indexes speed up common queries
-        CREATE INDEX idx_listings_seller_id ON listings(seller_id);        // Speed up seller queries
-        CREATE INDEX idx_listings_product_id ON listings(product_id);      // Speed up product queries
-        CREATE INDEX idx_messages_conversation_id ON messages(conversation_id); // Speed up message queries
-        CREATE INDEX idx_orders_buyer_id ON orders(buyer_id);              // Speed up buyer order queries
-        CREATE INDEX idx_orders_seller_id ON orders(seller_id);            // Speed up seller order queries
-        CREATE INDEX idx_ratings_reviewee_id ON ratings(reviewee_id);      // Speed up rating queries
-        CREATE INDEX idx_favorites_user_id ON favorites(user_id);          // Speed up favorite queries
-        CREATE INDEX idx_favorites_listing_id ON favorites(listing_id);    // Speed up listing favorite queries
-        CREATE INDEX idx_listing_tags_listing_id ON listing_tags(listing_id); // Speed up tag queries
-        CREATE INDEX idx_listing_tags_tag_id ON listing_tags(tag_id);      // Speed up listing queries by tag
+        CREATE INDEX idx_listings_seller_id ON listings(seller_id);        -- Speed up seller queries
+        CREATE INDEX idx_listings_product_id ON listings(product_id);      -- Speed up product queries
+        CREATE INDEX idx_messages_conversation_id ON messages(conversation_id); -- Speed up message queries
+        CREATE INDEX idx_orders_buyer_id ON orders(buyer_id);              -- Speed up buyer order queries
+        CREATE INDEX idx_orders_seller_id ON orders(seller_id);            -- Speed up seller order queries
+        CREATE INDEX idx_ratings_reviewee_id ON ratings(reviewee_id);      -- Speed up rating queries
+        CREATE INDEX idx_favorites_user_id ON favorites(user_id);          -- Speed up favorite queries
+        CREATE INDEX idx_favorites_listing_id ON favorites(listing_id);    -- Speed up listing favorite queries
+        CREATE INDEX idx_listing_tags_listing_id ON listing_tags(listing_id); -- Speed up tag queries
+        CREATE INDEX idx_listing_tags_tag_id ON listing_tags(tag_id);      -- Speed up listing queries by tag
         `);
     // Log successful completion of table creation
     console.log("Table created successfully.");
