@@ -4,9 +4,9 @@
  * It includes functions for dropping tables, creating tables, and seeding initial data.
  */
 
-// Import the database connection pool from the config file
-// This pool manages multiple connections to the database efficiently
-const pool = require('./config/db');
+// Import the database connection client from the config file
+// This client manages multiple connections to the database efficiently
+const client = require("./config/db");
 
 /**
  * Drops all existing tables in the database
@@ -17,7 +17,7 @@ async function dropTables() {
   try {
     // Log the start of table dropping process
     console.log("Dropping existing tables...");
-    
+
     // Execute SQL query to drop all tables
     // CASCADE ensures that dependent objects are also dropped
     // Tables are dropped in reverse order of dependencies
@@ -53,9 +53,9 @@ async function createTables() {
   try {
     // Log the start of table creation process
     console.log("Creating tables...");
-    
+
     // Execute SQL query to create all tables and indexes
-    await pool.query(`
+    await client.query(`
         -- Enable UUID extension for generating unique identifiers
         -- This is useful for generating unique IDs across tables
         CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -241,27 +241,27 @@ async function createInitialUsers() {
         email: "sarah@example.com",
         password: "$2b$10$G/M.7zrA8Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0", // hashed "password123"
         profile_pic: "https://example.com/sarah.jpg",
-        location: "New York, NY"
+        location: "New York, NY",
       },
       {
         name: "Mike Crochets",
         email: "mike@example.com",
         password: "$2b$10$G/M.7zrA8Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0", // hashed "password123"
         profile_pic: "https://example.com/mike.jpg",
-        location: "Los Angeles, CA"
+        location: "Los Angeles, CA",
       },
       {
         name: "Emma Yarns",
         email: "emma@example.com",
         password: "$2b$10$G/M.7zrA8Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0Zz0", // hashed "password123"
         profile_pic: "https://example.com/emma.jpg",
-        location: "Chicago, IL"
-      }
+        location: "Chicago, IL",
+      },
     ];
 
     // Insert each user into the database
     for (const user of users) {
-      await pool.query(
+      await client.query(
         `INSERT INTO users (name, email, password, profile_pic, location) 
          VALUES ($1, $2, $3, $4, $5)`,
         [user.name, user.email, user.password, user.profile_pic, user.location]
@@ -282,13 +282,13 @@ async function createInitialUsers() {
 async function createInitialListings() {
   try {
     console.log("Creating initial listings...");
-    
+
     // Get all user IDs to randomly assign listings
     // This query retrieves all user IDs from the database
-    const users = await pool.query('SELECT id FROM users');
+    const users = await client.query("SELECT id FROM users");
     // Convert the query results into an array of user IDs
     // users.rows is an array of objects, map() extracts just the id property
-    const userIds = users.rows.map(user => user.id);
+    const userIds = users.rows.map((user) => user.id);
 
     // Sample yarn listings data
     const yarnListings = [
@@ -301,9 +301,9 @@ async function createInitialListings() {
         composition: "100% Merino Wool",
         quality: "new",
         type: "sell",
-        price: 25.00,
+        price: 25.0,
         location: "New York, NY",
-        description: "Beautiful hand-dyed merino wool yarn"
+        description: "Beautiful hand-dyed merino wool yarn",
       },
       {
         brand: "Lion Brand",
@@ -314,10 +314,10 @@ async function createInitialListings() {
         composition: "100% Acrylic",
         quality: "good",
         type: "swap",
-        price: 15.00,
+        price: 15.0,
         location: "Los Angeles, CA",
-        description: "Great for baby blankets"
-      }
+        description: "Great for baby blankets",
+      },
     ];
 
     // Sample notion listings data
@@ -327,19 +327,19 @@ async function createInitialListings() {
         quantity: 1,
         quality: "new",
         type: "donate",
-        price: 12.00,
+        price: 12.0,
         location: "Chicago, IL",
-        description: "Size 8, 32 inch circular needles"
+        description: "Size 8, 32 inch circular needles",
       },
       {
         name: "Stitch Markers",
         quantity: 10,
         quality: "good",
         type: "donate",
-        price: 0.00,
+        price: 0.0,
         location: "New York, NY",
-        description: "Assorted colors"
-      }
+        description: "Assorted colors",
+      },
     ];
 
     // Sample finished object listings data
@@ -349,30 +349,30 @@ async function createInitialListings() {
         size: "Adult",
         quality: "new",
         type: "sell",
-        price: 45.00,
+        price: 45.0,
         location: "Los Angeles, CA",
-        description: "Warm wool scarf in herringbone pattern"
+        description: "Warm wool scarf in herringbone pattern",
       },
       {
         name: "Crochet Blanket",
         size: "Baby",
         quality: "good",
         type: "swap",
-        price: 30.00,
+        price: 30.0,
         location: "Chicago, IL",
-        description: "Soft baby blanket in pastel colors"
-      }
+        description: "Soft baby blanket in pastel colors",
+      },
     ];
 
     // Insert yarn listings and create corresponding entries in the listings table
     for (const yarn of yarnListings) {
-      const yarnResult = await pool.query(
+      const yarnResult = await client.query(
         `INSERT INTO yarn (pictures, brand, amount, length_yards, weight, color, 
                           composition, quality, type, price, location, user_id, description)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
          RETURNING id`,
         [
-          ['https://example.com/yarn1.jpg'],
+          ["https://example.com/yarn1.jpg"],
           yarn.brand,
           yarn.amount,
           yarn.length_yards,
@@ -388,28 +388,31 @@ async function createInitialListings() {
           // Math.floor() rounds down to the nearest integer
           // This gives us a random index into the userIds array
           userIds[Math.floor(Math.random() * userIds.length)],
-          yarn.description
+          yarn.description,
         ]
       );
 
-      await pool.query(
+      await client.query(
         `INSERT INTO listings (seller_id, listing_type, product_id, status)
          VALUES ($1, 'yarn', $2, 'available')`,
         // Again using Math.random() to select a random user as the seller
         // This ensures listings are distributed randomly among users
-        [userIds[Math.floor(Math.random() * userIds.length)], yarnResult.rows[0].id]
+        [
+          userIds[Math.floor(Math.random() * userIds.length)],
+          yarnResult.rows[0].id,
+        ]
       );
     }
 
     // Insert notion listings and create corresponding entries in the listings table
     for (const notion of notionListings) {
-      const notionResult = await pool.query(
+      const notionResult = await client.query(
         `INSERT INTO notions (pictures, name, quantity, quality, type, price, 
                             location, user_id, description)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id`,
         [
-          ['https://example.com/notion1.jpg'],
+          ["https://example.com/notion1.jpg"],
           notion.name,
           notion.quantity,
           notion.quality,
@@ -419,28 +422,31 @@ async function createInitialListings() {
           // Randomly select a user ID from the array
           // This distributes notion listings randomly among users
           userIds[Math.floor(Math.random() * userIds.length)],
-          notion.description
+          notion.description,
         ]
       );
 
-      await pool.query(
+      await client.query(
         `INSERT INTO listings (seller_id, listing_type, product_id, status)
          VALUES ($1, 'notion', $2, 'available')`,
         // Randomly assign a seller for this notion listing
         // This could be the same or different from the user_id above
-        [userIds[Math.floor(Math.random() * userIds.length)], notionResult.rows[0].id]
+        [
+          userIds[Math.floor(Math.random() * userIds.length)],
+          notionResult.rows[0].id,
+        ]
       );
     }
 
     // Insert finished object listings and create corresponding entries in the listings table
     for (const finishedObject of finishedObjectListings) {
-      const finishedObjectResult = await pool.query(
+      const finishedObjectResult = await client.query(
         `INSERT INTO finished_objects (pictures, name, size, quality, type, price, 
                                      location, user_id, description)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING id`,
         [
-          ['https://example.com/finished1.jpg'],
+          ["https://example.com/finished1.jpg"],
           finishedObject.name,
           finishedObject.size,
           finishedObject.quality,
@@ -450,17 +456,20 @@ async function createInitialListings() {
           // Randomly select a user to own this finished object
           // This creates a realistic distribution of items among users
           userIds[Math.floor(Math.random() * userIds.length)],
-          finishedObject.description
+          finishedObject.description,
         ]
       );
 
-      await pool.query(
+      await client.query(
         `INSERT INTO listings (seller_id, listing_type, product_id, status)
          VALUES ($1, 'finished_object', $2, 'available')`,
         // Randomly assign a seller for this finished object listing
         // Note: The seller could be different from the user_id above,
         // allowing for scenarios where users sell items on behalf of others
-        [userIds[Math.floor(Math.random() * userIds.length)], finishedObjectResult.rows[0].id]
+        [
+          userIds[Math.floor(Math.random() * userIds.length)],
+          finishedObjectResult.rows[0].id,
+        ]
       );
     }
 
@@ -496,18 +505,16 @@ async function rebuildDB() {
 async function start() {
   try {
     console.log("🚀 Starting database seeding...");
-    await pool.connect();
+    await client.connect();
     await rebuildDB();
   } catch (error) {
     console.error("❌ Error during seed startup:", error);
     throw error;
   } finally {
-    await pool.end();
+    await client.end();
     console.log("🔚 Seeding process complete.");
   }
 }
 
 // Execute the seeding process
 start();
-
-  

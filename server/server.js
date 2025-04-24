@@ -1,7 +1,7 @@
 /** Middleware and Listening Functionality */
 
-// Functon imports:
-const { client } = require("./db/db.js");
+// Function imports:
+const client = require("./db/config/db.js");
 
 // Express imports:
 const express = require("express");
@@ -11,7 +11,7 @@ const app = express();
 app.use(express.json());
 
 // Middleware for printing information + errors:
-app.use(require("morgan")("dev"));
+// app.use(require("morgan")("dev"));
 
 // Middleware for linking frontend to backend:
 const cors = require("cors");
@@ -25,8 +25,8 @@ app.use(
 );
 // BTW: double-quote strings aren't accepted as JSONs, so on line 20, you have to use single quotes
 
-const api = require("./api/api.js");
-app.use("/api", api);
+// const api = require("./api/api.js");
+// app.use("/api", api);
 
 //For deployment only:
 const path = require("path");
