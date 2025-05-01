@@ -21,7 +21,7 @@ async function dropTables() {
     // Execute SQL query to drop all tables
     // CASCADE ensures that dependent objects are also dropped
     // Tables are dropped in reverse order of dependencies
-    await pool.query(`
+    await client.query(`
             DROP TABLE IF EXISTS messages CASCADE;        -- Drop messages table first as it depends on msg_thread
             DROP TABLE IF EXISTS msg_thread CASCADE;      -- Drop message threads
             DROP TABLE IF EXISTS listing_tags CASCADE;    -- Drop junction table for tags
