@@ -81,13 +81,15 @@ async function createTables() {
             amount INTEGER,                           -- Number of skeins/balls
             length_yards INTEGER,                     -- Length in yards
             length_meters INTEGER,                    -- Length in meters
-            weight VARCHAR(50),                       -- Yarn weight (fingering, worsted, etc)
-            color VARCHAR(100),                       -- Yarn color
-            composition TEXT,                         -- Fiber content
-            quality VARCHAR(20) CHECK (quality IN ('new', 'good', 'fair', 'well-loved')), -- Condition check
+            weight VARCHAR(50) CHECK ('Thread', 'Cobweb', 'Lace', 'Light Fingering', 'Fingering', 'Sport', 'DK', 'Worsted', 'Aran', 'Bulky', 'Super Bulky', 'Jumbo'),                       -- Yarn weight (fingering, worsted, etc)
+            color VARCHAR(100) CHECK ('Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Gray', 'Black', 'White'),                       -- Yarn color
+            composition VARCHAR(50) CHECK ('Wool', 'Cashmere', 'Mohair', 'Angora', 'Acrylic', 'Alpaca', 'Cotton', 'Rayon', 'Chenille', 'Hemp', 'Linen', 'Merino', 'Metallic', 'Silk', 'Boucle', 'Bamboo', 'Elastane'),                         -- Fiber content
+            quality VARCHAR(20) CHECK (quality IN ('New', 'Good', 'Fair', 'Well-loved')), -- Condition check
             type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type check
             price DECIMAL(10, 2),                     -- Price with 2 decimal places
             location VARCHAR(100),                    -- Item location
+            needle_size VARCHAR(25) CHECK ('1.50 mm/US 000', '1.75 mm/US 00', '2 mm/US 0', '2.25 mm/US 1', '2.75 mm/US 2', '3 mm', '3.125 mm/US 3', '3.25 mm/US 3', '3.50 mm/US 4', '3.75 mm/US 5', '4 mm/US 6', '4.25 mm/US 6', '4.50 mm/US 7', '5 mm/US 8', '5.25 mm/US 9', '5.50 mm/US 9', '5.75 mm/US 10', '6 mm/US 10', '6.50 mm/US 10 ½', '7 mm', '8 mm/US 11', '9 mm/US 13', '10 mm/US 15', '12.50 mm/US 17', '12.75 mm/US 17', '15 mm/US 19', '19 mm/US 35', '25 mm/US 50', '35 mm/US 70'), 
+            hook_size VARCHAR(25) CHECK ('2.25 mm/B-1', '2.50 mm', '2.75 mm/C-2', '3.125 mm/D', '3.25 mm/D-3', '3.50 mm/E-4', '3.75 mm/F-5', '4 mm/G-6', '4.25 mm/G', '4.50 mm/7', '5 mm/H-8', '5.25 mm/I', '5.50 mm/I-9', '5.75 mm/J', '6 mm/J-10', '6.50 mm/K-10 ½', '7 mm', '8 mm/L-11', '9 mm/M/N-13', '10 mm/N/P-15', '11.50 mm/P-16', '12 mm', '15 mm/P/Q', '15.75 mm/Q', '16 mm/Q', '19 mm/S', '25 mm/T/U/X', '30 mm/T/X'.),
             user_id INTEGER REFERENCES users(id),     -- Foreign key to users table
             description TEXT,                         -- Detailed description
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
