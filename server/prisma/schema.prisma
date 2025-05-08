@@ -1,0 +1,195 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ActionType {
+  sell
+  swap
+  donate
+}
+
+enum ListingCategory {
+  yarn
+  notion
+  finished_object
+}
+
+enum Quality {
+  new        @map("new")
+  good       @map("good")
+  fair       @map("fair")
+  well_loved @map("well-loved")
+}
+
+enum RatingRole {
+  buyer
+  seller
+}
+
+model User {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(100)
+  email           String           @unique @db.VarChar(255)
+  password        String           @db.Text
+  profile_pic     String?          @db.Text
+  location        String?          @db.VarChar(100)
+  created_at      DateTime         @default(now())
+  yarns           Yarn[]
+  notions         Notion[]
+  finishedObjects FinishedObject[]
+  listings        Listing[]        @relation("SellerListings")
+  buyerThreads    MsgThread[]      @relation("BuyerThreads")
+  sellerThreads   MsgThread[]      @relation("SellerThreads")
+  messages        Message[]        @relation("SenderMessages")
+  ordersBought    Order[]          @relation("BuyerOrders")
+  ordersSold      Order[]          @relation("SellerOrders")
+  reviewsGiven    Rating[]         @relation("Reviewer")
+  reviewsReceived Rating[]         @relation("Reviewee")
+  favorites       Favorite[]
+}
+
+model Yarn {
+  id            Int          @id @default(autoincrement())
+  pictures      String[]     @db.Text
+  brand         String?      @db.VarChar(100)
+  amount        Int?
+  length_yards  Int?         @map("length_yards")
+  length_meters Int?         @map("length_meters")
+  weight        String?      @db.VarChar(50)
+  color         String?      @db.VarChar(100)
+  composition   String?      @db.VarChar(50)
+  quality       Quality?
+  type          ActionType?
+  price         Decimal?     @db.Decimal(10,2)
+  location      String?      @db.VarChar(100)
+  needle_size   String?      @db.VarChar(25)
+  hook_size     String?      @db.VarChar(25)
+  user          User?        @relation(fields: [user_id], references: [id])
+  user_id       Int?
+  description   String?      @db.Text
+  created_at    DateTime     @default(now())
+}
+
+model Notion {
+  id          Int       @id @default(autoincrement())
+  pictures    String[]  @db.Text
+  name        String?   @db.VarChar(100)
+  quantity    Int?
+  quality     Quality?
+  type        ActionType?
+  price       Decimal?  @db.Decimal(10,2)
+  location    String?   @db.VarChar(100)
+  user        User?     @relation(fields: [user_id], references: [id])
+  user_id     Int?
+  description String?   @db.Text
+  created_at  DateTime  @default(now())
+}
+
+model FinishedObject {
+  id          Int       @id @default(autoincrement())
+  pictures    String[]  @db.Text
+  name        String?   @db.VarChar(100)
+  size        String?   @db.VarChar(50)
+  quality     Quality?
+  type        ActionType?
+  price       Decimal?  @db.Decimal(10,2)
+  location    String?   @db.VarChar(100)
+  user        User?     @relation(fields: [user_id], references: [id])
+  user_id     Int?
+  description String?   @db.Text
+  created_at  DateTime  @default(now())
+}
+
+model Listing {
+  id           Int             @id @default(autoincrement())
+  seller       User            @relation("SellerListings", fields: [seller_id], references: [id])
+  seller_id    Int
+  listing_type ListingCategory
+  product_id   Int
+  status       String          @default("available")
+  created_at   DateTime        @default(now())
+  threads      MsgThread[]
+  orders       Order[]
+  favorites    Favorite[]
+  listingTags  ListingTag[]
+}
+
+model MsgThread {
+  id          Int       @id @default(autoincrement())
+  buyer       User      @relation("BuyerThreads", fields: [buyer_id], references: [id])
+  buyer_id    Int
+  seller      User      @relation("SellerThreads", fields: [seller_id], references: [id])
+  seller_id   Int
+  listing     Listing   @relation(fields: [listing_id], references: [id])
+  listing_id  Int
+  created_at  DateTime  @default(now())
+  messages    Message[]
+}
+
+model Message {
+  id               Int       @id @default(autoincrement())
+  conversation     MsgThread @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  conversation_id  Int       @map("conversation_id")
+  sender           User      @relation("SenderMessages", fields: [sender_id], references: [id])
+  sender_id        Int       @map("sender_id")
+  text             String
+  created_at       DateTime  @default(now())
+ }
+
+model Order {
+  id           Int      @id @default(autoincrement())
+  listing      Listing  @relation(fields: [listing_id], references: [id])
+  listing_id   Int
+  buyer        User     @relation("BuyerOrders", fields: [buyer_id], references: [id])
+  buyer_id     Int
+  seller       User     @relation("SellerOrders", fields: [seller_id], references: [id])
+  seller_id    Int
+  final_price  Decimal  @db.Decimal(10,2)
+  created_at   DateTime @default(now())
+  ratings      Rating[]
+}
+
+model Rating {
+  id           Int        @id @default(autoincrement())
+  reviewer     User       @relation("Reviewer", fields: [reviewer_id], references: [id])
+  reviewer_id  Int
+  reviewee     User       @relation("Reviewee", fields: [reviewee_id], references: [id])
+  reviewee_id  Int
+  role         RatingRole
+  stars        Int
+  review       String?
+  order        Order      @relation(fields: [order_id], references: [id])
+  order_id     Int
+  created_at   DateTime   @default(now())
+  @@unique([reviewer_id, reviewee_id, order_id])
+}
+
+model Favorite {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id      Int
+  listing      Listing  @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+  listing_id   Int
+  created_at   DateTime @default(now())
+  @@unique([user_id, listing_id])
+}
+
+model Tag {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique @db.VarChar(50)
+  listingTags ListingTag[]
+}
+
+model ListingTag {
+  id          Int       @id @default(autoincrement())
+  listing     Listing   @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+  listing_id  Int
+  tag         Tag       @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+  tag_id      Int
+  @@unique([listing_id, tag_id])
+}
