@@ -12,9 +12,10 @@ const client = require("../config/db");
 // [o]quality CHECK (quality IN ('new', 'good', 'fair', 'well-loved'))
 // [o]type CHECK (type IN ('sell', 'swap', 'donate'))
 // [o]price
-// [o]location
+// [o]location use openstreetmap geonames web service to search radius of user location
 // [o]needle_size
 // [o]hook_size 
+// [] user/buyer pays shipping ADD
 
 async function createYarn(data) {
   const result = await client.query(
@@ -47,6 +48,7 @@ async function getYarnById(YarnId){
       return result.rows;
 }
 
+//ADD useMemo
 async function getYarnByFilters(filters) {
     let query = `SELECT * FROM yarn WHERE 1=1`;
     const values = [];
