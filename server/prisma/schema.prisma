@@ -48,8 +48,8 @@ model User {
   messages        Message[]        @relation("SenderMessages")
   ordersBought    Order[]          @relation("BuyerOrders")
   ordersSold      Order[]          @relation("SellerOrders")
-  reviewsGiven    Rating[]         @relation("Reviewer")
-  reviewsReceived Rating[]         @relation("Reviewee")
+  reviewsGiven    Rating[]         @relation("seller")
+  reviewsReceived Rating[]         @relation("buyer")
   favorites       Favorite[]
 }
 
@@ -156,17 +156,17 @@ model Order {
 
 model Rating {
   id           Int        @id @default(autoincrement())
-  reviewer     User       @relation("Reviewer", fields: [reviewer_id], references: [id])
-  reviewer_id  Int
-  reviewee     User       @relation("Reviewee", fields: [reviewee_id], references: [id])
-  reviewee_id  Int
+  seller     User       @relation("seller", fields: [seller_id], references: [id])
+  seller_id  Int
+  buyer     User       @relation("buyer", fields: [buyer_id], references: [id])
+  buyer_id  Int
   role         RatingRole
   stars        Int
   review       String?
   order        Order      @relation(fields: [order_id], references: [id])
   order_id     Int
   created_at   DateTime   @default(now())
-  @@unique([reviewer_id, reviewee_id, order_id])
+  @@unique([seller_id, buyer_id, order_id])
 }
 
 model Favorite {
