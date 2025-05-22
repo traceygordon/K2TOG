@@ -81,15 +81,15 @@ async function createTables() {
             amount INTEGER,                                -- Number of skeins/balls
             length_yards INTEGER,                          -- Length in yards
             length_meters INTEGER,                         -- Length in meters
-            weight VARCHAR(50)                             -- Yarn weight ('Thread', 'Cobweb', 'Lace', 'Light Fingering', 'Fingering', 'Sport', 'DK', 'Worsted', 'Aran', 'Bulky', 'Super Bulky', 'Jumbo')
-            color VARCHAR(100)                             -- Yarn color('Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Gray', 'Black', 'White'),                     
-            composition VARCHAR(50)                        -- Fiber content('Wool', 'Cashmere', 'Mohair', 'Angora', 'Acrylic', 'Alpaca', 'Cotton', 'Rayon', 'Chenille', 'Hemp', 'Linen', 'Merino', 'Metallic', 'Silk', 'Boucle', 'Bamboo', 'Elastane')
-            quality VARCHAR(20)                            -- Condition (quality IN ('New', 'Good', 'Fair', 'Well-loved')),
-            type VARCHAR(20)                               -- Listing type (type IN ('sell', 'swap', 'donate')), 
+            weight VARCHAR(50),                            -- Yarn weight ('Thread', 'Cobweb', 'Lace', 'Light Fingering', 'Fingering', 'Sport', 'DK', 'Worsted', 'Aran', 'Bulky', 'Super Bulky', 'Jumbo')
+            color VARCHAR(100),                            -- Yarn color ('Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink', 'Brown', 'Gray', 'Black', 'White')
+            composition VARCHAR(50),                       -- Fiber content ('Wool', 'Cashmere', 'Mohair', 'Angora', 'Acrylic', 'Alpaca', 'Cotton', 'Rayon', 'Chenille', 'Hemp', 'Linen', 'Merino', 'Metallic', 'Silk', 'Boucle', 'Bamboo', 'Elastane')
+            quality VARCHAR(20) CHECK (quality IN ('New', 'Good', 'Fair', 'Well-loved')), -- Condition
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type
             price DECIMAL(10, 2),                          -- Price with 2 decimal places
             location VARCHAR(100),                         -- Item location
-            needle_size VARCHAR(25)                        -- Knitting needle sizes ('1.50 mm/US 000', '1.75 mm/US 00', '2 mm/US 0', '2.25 mm/US 1', '2.75 mm/US 2', '3 mm', '3.125 mm/US 3', '3.25 mm/US 3', '3.50 mm/US 4', '3.75 mm/US 5', '4 mm/US 6', '4.25 mm/US 6', '4.50 mm/US 7', '5 mm/US 8', '5.25 mm/US 9', '5.50 mm/US 9', '5.75 mm/US 10', '6 mm/US 10', '6.50 mm/US 10 ½', '7 mm', '8 mm/US 11', '9 mm/US 13', '10 mm/US 15', '12.50 mm/US 17', '12.75 mm/US 17', '15 mm/US 19', '19 mm/US 35', '25 mm/US 50', '35 mm/US 70'), 
-            hook_size VARCHAR(25)                          -- Crochet hook sizes ('2.25 mm/B-1', '2.50 mm', '2.75 mm/C-2', '3.125 mm/D', '3.25 mm/D-3', '3.50 mm/E-4', '3.75 mm/F-5', '4 mm/G-6', '4.25 mm/G', '4.50 mm/7', '5 mm/H-8', '5.25 mm/I', '5.50 mm/I-9', '5.75 mm/J', '6 mm/J-10', '6.50 mm/K-10 ½', '7 mm', '8 mm/L-11', '9 mm/M/N-13', '10 mm/N/P-15', '11.50 mm/P-16', '12 mm', '15 mm/P/Q', '15.75 mm/Q', '16 mm/Q', '19 mm/S', '25 mm/T/U/X', '30 mm/T/X'.),
+            needle_size VARCHAR(25),                        -- Knitting needle sizes ('1.50 mm/US 000', '1.75 mm/US 00', '2 mm/US 0', '2.25 mm/US 1', '2.75 mm/US 2', '3 mm', '3.125 mm/US 3', '3.25 mm/US 3', '3.50 mm/US 4', '3.75 mm/US 5', '4 mm/US 6', '4.25 mm/US 6', '4.50 mm/US 7', '5 mm/US 8', '5.25 mm/US 9', '5.50 mm/US 9', '5.75 mm/US 10', '6 mm/US 10', '6.50 mm/US 10 ½', '7 mm', '8 mm/US 11', '9 mm/US 13', '10 mm/US 15', '12.50 mm/US 17', '12.75 mm/US 17', '15 mm/US 19', '19 mm/US 35', '25 mm/US 50', '35 mm/US 70')
+            hook_size VARCHAR(25),                          -- Crochet hook sizes ('2.25 mm/B-1', '2.50 mm', '2.75 mm/C-2', '3.125 mm/D', '3.25 mm/D-3', '3.50 mm/E-4', '3.75 mm/F-5', '4 mm/G-6', '4.25 mm/G', '4.50 mm/7', '5 mm/H-8', '5.25 mm/I', '5.50 mm/I-9', '5.75 mm/J', '6 mm/J-10', '6.50 mm/K-10 ½', '7 mm', '8 mm/L-11', '9 mm/M/N-13', '10 mm/N/P-15', '11.50 mm/P-16', '12 mm', '15 mm/P/Q', '15.75 mm/Q', '16 mm/Q', '19 mm/S', '25 mm/T/U/X', '30 mm/T/X')
             user_id INTEGER REFERENCES users(id),          -- Foreign key to users table
             description TEXT,                              -- Detailed description
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
@@ -102,8 +102,8 @@ async function createTables() {
             pictures TEXT[],                          -- Array of image URLs
             name VARCHAR(100),                        -- Notion name
             quantity INTEGER,                         -- Number of items
-            quality VARCHAR(20)  (quality IN ('new', 'good', 'fair', 'well-loved')), -- Condition 
-            type VARCHAR(20)  (type IN ('sell', 'swap', 'donate')), -- Listing type 
+            quality VARCHAR(20) CHECK (quality IN ('New', 'Good', 'Fair', 'Well-loved')), -- Condition
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type
             price DECIMAL(10, 2),                     -- Price with 2 decimal places
             location VARCHAR(100),                    -- Item location
             user_id INTEGER REFERENCES users(id),     -- Foreign key to users table
@@ -118,8 +118,8 @@ async function createTables() {
             pictures TEXT[],                          -- Array of image URLs
             name VARCHAR(100),                        -- Item name
             size VARCHAR(50),                         -- Size information
-            quality VARCHAR(20)  (quality IN ('new', 'good', 'fair', 'well-loved')), -- Condition 
-            type VARCHAR(20)  (type IN ('sell', 'swap', 'donate')), -- Listing type 
+            quality VARCHAR(20) CHECK (quality IN ('New', 'Good', 'Fair', 'Well-loved')), -- Condition
+            type VARCHAR(20) CHECK (type IN ('sell', 'swap', 'donate')), -- Listing type
             price DECIMAL(10, 2),                     -- Price with 2 decimal places
             location VARCHAR(100),                    -- Item location
             user_id INTEGER REFERENCES users(id),     -- Foreign key to users table
@@ -132,7 +132,7 @@ async function createTables() {
         CREATE TABLE listings (
             id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
             seller_id INTEGER REFERENCES users(id),   -- Foreign key to seller
-            listing_type VARCHAR(20)  (listing_type IN ('yarn', 'notion', 'finished_object')), -- Product type
+            listing_type VARCHAR(20) CHECK (listing_type IN ('yarn', 'notion', 'finished_object')), -- Product type
             product_id INTEGER NOT NULL,              -- ID of the specific product
             status VARCHAR(20) DEFAULT 'available',   -- Listing status
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Record creation timestamp
@@ -175,8 +175,8 @@ async function createTables() {
             id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
             seller_id INTEGER REFERENCES users(id), -- Foreign key to seller
             buyer_id INTEGER REFERENCES users(id), -- Foreign key to user being reviewed
-            role VARCHAR(10)  (role IN ('buyer', 'seller')), -- Role in transaction
-            stars INTEGER  (stars BETWEEN 1 AND 5), -- Rating value
+            role VARCHAR(10) CHECK (role IN ('buyer', 'seller')), -- Role in transaction
+            stars INTEGER CHECK (stars BETWEEN 1 AND 5), -- Rating value
             review TEXT,                              -- Review text
             order_id INTEGER REFERENCES orders(id),   -- Foreign key to order
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Record creation timestamp
@@ -301,7 +301,7 @@ async function createInitialListings() {
         weight: "Worsted",
         color: "Purple",
         composition: "100% Merino Wool",
-        quality: "new",
+        quality: "New",
         type: "sell",
         price: 25.0,
         location: "New York, NY",
@@ -314,7 +314,7 @@ async function createInitialListings() {
         weight: "DK",
         color: "Blue",
         composition: "100% Acrylic",
-        quality: "good",
+        quality: "Good",
         type: "swap",
         price: 15.0,
         location: "Los Angeles, CA",
@@ -327,7 +327,7 @@ async function createInitialListings() {
       {
         name: "Circular Needles",
         quantity: 1,
-        quality: "new",
+        quality: "New",
         type: "donate",
         price: 12.0,
         location: "Chicago, IL",
@@ -336,7 +336,7 @@ async function createInitialListings() {
       {
         name: "Stitch Markers",
         quantity: 10,
-        quality: "good",
+        quality: "Good",
         type: "donate",
         price: 0.0,
         location: "New York, NY",
@@ -349,7 +349,7 @@ async function createInitialListings() {
       {
         name: "Hand-knit Scarf",
         size: "Adult",
-        quality: "new",
+        quality: "New",
         type: "sell",
         price: 45.0,
         location: "Los Angeles, CA",
@@ -358,7 +358,7 @@ async function createInitialListings() {
       {
         name: "Crochet Blanket",
         size: "Baby",
-        quality: "good",
+        quality: "Good",
         type: "swap",
         price: 30.0,
         location: "Chicago, IL",
