@@ -1,5 +1,5 @@
 // user_models.js
-const client = require('../config/db');
+const client = require("../config/db");
 
 // 🔐 Authentication
 async function createUser({ name, email, password, profile_pic, location }) {
@@ -13,18 +13,14 @@ async function createUser({ name, email, password, profile_pic, location }) {
 }
 
 async function getUserByEmail(email) {
-  const result = await client.query(
-    `SELECT * FROM users WHERE email = $1`,
-    [email]
-  );
+  const result = await client.query(`SELECT * FROM users WHERE email = $1`, [
+    email,
+  ]);
   return result.rows[0];
 }
 
 async function getUserById(id) {
-  const result = await client.query(
-    `SELECT * FROM users WHERE id = $1`,
-    [id]
-  );
+  const result = await client.query(`SELECT * FROM users WHERE id = $1`, [id]);
   return result.rows[0];
 }
 
@@ -64,7 +60,7 @@ async function getUserPublicProfile(userId) {
 // ⭐ Ratings & Reviews
 async function getUserRatings(userId) {
   const result = await client.query(
-    `SELECT * FROM ratings WHERE reviewee_id = $1`,
+    `SELECT * FROM ratings WHERE buyer_id = $1`,
     [userId]
   );
   return result.rows;
@@ -72,18 +68,25 @@ async function getUserRatings(userId) {
 
 async function getAverageUserRating(userId) {
   const result = await client.query(
-    `SELECT AVG(stars)::numeric(2,1) as average FROM ratings WHERE reviewee_id = $1`,
+    `SELECT AVG(stars)::numeric(2,1) as average FROM ratings WHERE buyer_id = $1`,
     [userId]
   );
   return result.rows[0].average;
 }
 
-async function createUserRating({ reviewer_id, reviewee_id, role, stars, review, order_id }) {
+async function createUserRating({
+  seller_id,
+  buyer_id,
+  role,
+  stars,
+  review,
+  order_id,
+}) {
   const result = await client.query(
-    `INSERT INTO ratings (reviewer_id, reviewee_id, role, stars, review, order_id)
+    `INSERT INTO ratings (seller_id, buyer_id, role, stars, review, order_id)
      VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING *`,
-    [reviewer_id, reviewee_id, role, stars, review, order_id]
+    [seller_id, buyer_id, role, stars, review, order_id]
   );
   return result.rows[0];
 }

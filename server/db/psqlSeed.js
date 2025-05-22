@@ -173,14 +173,14 @@ async function createTables() {
         -- Allows users to rate each other after transactions
         CREATE TABLE ratings (
             id SERIAL PRIMARY KEY,                    -- Auto-incrementing primary key
-            reviewer_id INTEGER REFERENCES users(id), -- Foreign key to reviewer
-            reviewee_id INTEGER REFERENCES users(id), -- Foreign key to user being reviewed
+            seller_id INTEGER REFERENCES users(id), -- Foreign key to seller
+            buyer_id INTEGER REFERENCES users(id), -- Foreign key to user being reviewed
             role VARCHAR(10)  (role IN ('buyer', 'seller')), -- Role in transaction
             stars INTEGER  (stars BETWEEN 1 AND 5), -- Rating value
             review TEXT,                              -- Review text
             order_id INTEGER REFERENCES orders(id),   -- Foreign key to order
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Record creation timestamp
-            UNIQUE (reviewer_id, reviewee_id, order_id) -- Prevent duplicate reviews
+            UNIQUE (seller_id, buyer_id, order_id) -- Prevent duplicate reviews
             );
 
         -- Favorites table: Stores user's favorite listings
@@ -216,7 +216,7 @@ async function createTables() {
         CREATE INDEX idx_messages_conversation_id ON messages(conversation_id); -- Speed up message queries
         CREATE INDEX idx_orders_buyer_id ON orders(buyer_id);              -- Speed up buyer order queries
         CREATE INDEX idx_orders_seller_id ON orders(seller_id);            -- Speed up seller order queries
-        CREATE INDEX idx_ratings_reviewee_id ON ratings(reviewee_id);      -- Speed up rating queries
+        CREATE INDEX idx_ratings_buyer_id ON ratings(buyer_id);      -- Speed up rating queries
         CREATE INDEX idx_favorites_user_id ON favorites(user_id);          -- Speed up favorite queries
         CREATE INDEX idx_favorites_listing_id ON favorites(listing_id);    -- Speed up listing favorite queries
         CREATE INDEX idx_listing_tags_listing_id ON listing_tags(listing_id); -- Speed up tag queries

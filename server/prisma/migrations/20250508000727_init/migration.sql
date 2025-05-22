@@ -130,8 +130,8 @@ CREATE TABLE "Order" (
 -- CreateTable
 CREATE TABLE "Rating" (
     "id" SERIAL NOT NULL,
-    "reviewer_id" INTEGER NOT NULL,
-    "reviewee_id" INTEGER NOT NULL,
+    "seller_id" INTEGER NOT NULL,
+    "buyer_id" INTEGER NOT NULL,
     "role" "RatingRole" NOT NULL,
     "stars" INTEGER NOT NULL,
     "review" TEXT,
@@ -172,7 +172,7 @@ CREATE TABLE "ListingTag" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Rating_reviewer_id_reviewee_id_order_id_key" ON "Rating"("reviewer_id", "reviewee_id", "order_id");
+CREATE UNIQUE INDEX "Rating_seller_id_buyer_id_order_id_key" ON "Rating"("seller_id", "buyer_id", "order_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Favorite_user_id_listing_id_key" ON "Favorite"("user_id", "listing_id");
@@ -220,10 +220,10 @@ ALTER TABLE "Order" ADD CONSTRAINT "Order_buyer_id_fkey" FOREIGN KEY ("buyer_id"
 ALTER TABLE "Order" ADD CONSTRAINT "Order_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Rating" ADD CONSTRAINT "Rating_reviewer_id_fkey" FOREIGN KEY ("reviewer_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Rating" ADD CONSTRAINT "Rating_seller_id_fkey" FOREIGN KEY ("seller_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Rating" ADD CONSTRAINT "Rating_reviewee_id_fkey" FOREIGN KEY ("reviewee_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Rating" ADD CONSTRAINT "Rating_buyer_id_fkey" FOREIGN KEY ("buyer_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
