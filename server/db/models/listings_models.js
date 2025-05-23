@@ -1,5 +1,5 @@
 // listings_models.js
-const client = require('../config/db');
+const client = require("../config/db");
 
 // 🔧 CRUD Operations
 async function createListing({ seller_id, listing_type, product_id }) {
@@ -13,10 +13,9 @@ async function createListing({ seller_id, listing_type, product_id }) {
 }
 
 async function getListingById(listingId) {
-  const result = await client.query(
-    `SELECT * FROM listings WHERE id = $1`,
-    [listingId]
-  );
+  const result = await client.query(`SELECT * FROM listings WHERE id = $1`, [
+    listingId,
+  ]);
   return result.rows[0];
 }
 
@@ -43,17 +42,25 @@ async function deleteListing(listingId) {
 
 // 🔍 Query & Display
 async function getListingsByUserId(userId) {
-  const result = await client.query(`SELECT * FROM listings WHERE seller_id = $1`, [userId]);
+  const result = await client.query(
+    `SELECT * FROM listings WHERE seller_id = $1`,
+    [userId]
+  );
   return result.rows;
 }
 
 async function getListingsByType(type) {
-  const result = await client.query(`SELECT * FROM listings WHERE listing_type = $1`, [type]);
+  const result = await client.query(
+    `SELECT * FROM listings WHERE listing_type = $1`,
+    [type]
+  );
   return result.rows;
 }
 
 async function getAvailableListings() {
-  const result = await client.query(`SELECT * FROM listings WHERE status = 'available'`);
+  const result = await client.query(
+    `SELECT * FROM listings WHERE status = 'available'`
+  );
   return result.rows;
 }
 
@@ -108,10 +115,9 @@ async function removeTagFromListing(listingId, tagId) {
 }
 
 async function clearTagsFromListing(listingId) {
-  await client.query(
-    `DELETE FROM listing_tags WHERE listing_id = $1`,
-    [listingId]
-  );
+  await client.query(`DELETE FROM listing_tags WHERE listing_id = $1`, [
+    listingId,
+  ]);
 }
 
 async function getTagsForListing(listingId) {
@@ -142,11 +148,11 @@ async function getAllTags() {
 
 // 🛒 Marketplace Logic
 async function markListingAsSold(listingId) {
-  return updateListing(listingId, { status: 'sold' });
+  return updateListing(listingId, { status: "sold" });
 }
 
 async function archiveListing(listingId) {
-  return updateListing(listingId, { status: 'archived' });
+  return updateListing(listingId, { status: "archived" });
 }
 
 async function getListingStatus(listingId) {
@@ -179,15 +185,18 @@ async function getListingWithProduct(listingId) {
   if (!listing) return null;
 
   const tableMap = {
-    yarn: 'yarn',
-    notion: 'notions',
-    finished_object: 'finished_objects'
+    yarn: "yarn",
+    notion: "notions",
+    finished_object: "finished_objects",
   };
   const tableName = tableMap[listing.listing_type];
 
   if (!tableName) return listing;
 
-  const result = await client.query(`SELECT * FROM ${tableName} WHERE id = $1`, [listing.product_id]);
+  const result = await client.query(
+    `SELECT * FROM ${tableName} WHERE id = $1`,
+    [listing.product_id]
+  );
   return { ...listing, product: result.rows[0] };
 }
 
@@ -220,6 +229,90 @@ async function getListingOwner(listingId) {
   return result.rows[0];
 }
 
+/** Listing Analytics Functions */
+
+// Stats Function for Listing Type Count and Percentages:
+async function getListingTypePercentages() {
+  try {
+    const { rows } = await client.query(
+      `
+      SELECT 
+        listing_type,
+        COUNT(*) AS type_count,
+        (SELECT COUNT(*) FROM listings) AS total_count,
+        ROUND(
+           (COUNT(*) * 100.0) / NULLIF((SELECT COUNT(*) FROM listings), 0),
+           2
+        ) AS type_percent
+      FROM listings
+      GROUP BY listing_type
+      ORDER BY type_percent DESC;
+      `
+    );
+
+    return rows;
+  } catch (error) {
+    console.error("Error getting listing type percentages:", error);
+    throw error;
+  }
+}
+
+// Status Transition Counts (This would require a listing_audit table and automated audit 
+// entries):
+
+// Necessary Table:
+// CREATE TABLE listings_audit (
+//   audit_id SERIAL PRIMARY KEY,
+//   listing_id INTEGER NOT NULL,
+//   seller_id INTEGER,
+//   action VARCHAR(10) NOT NULL, -- 'INSERT', 'UPDATE', 'DELETE'
+//   changed_fields JSONB,
+//   status_before VARCHAR(20),
+//   status_after VARCHAR(20),
+//   changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//   changed_by INTEGER -- Optional: user id or admin id
+// );
+
+// Necessary Automation:
+// CREATE OR REPLACE FUNCTION log_listing_change() RETURNS TRIGGER AS $$
+// BEGIN
+//   INSERT INTO listings_audit (
+//     listing_id,
+//     seller_id,
+//     action,
+//     changed_fields,
+//     status_before,
+//     status_after,
+//     changed_by
+//   )
+//   VALUES (
+//     NEW.id,
+//     NEW.seller_id,
+//     TG_OP,
+//     hstore_to_jsonb_loose(hstore(OLD.*) - hstore(NEW.*)),
+//     OLD.status,
+//     NEW.status,
+//     current_setting('myapp.current_user_id', true)::INTEGER
+//   );
+//   RETURN NEW;
+// END;
+// $$ LANGUAGE plpgsql;
+
+// CREATE TRIGGER listings_audit_trigger
+// AFTER INSERT OR UPDATE OR DELETE ON listings
+// FOR EACH ROW EXECUTE FUNCTION log_listing_change();
+
+
+// Final SQL for a Model: 
+// SELECT 
+//   status_before || ' → ' || status_after AS transition,
+//   COUNT(*) AS count
+// FROM listings_audit
+// WHERE status_before IS NOT NULL AND status_after IS NOT NULL
+// GROUP BY transition
+// ORDER BY count DESC;
+
+
 module.exports = {
   createListing,
   getListingById,
@@ -246,5 +339,6 @@ module.exports = {
   getListingWithProduct,
   getListingWithFavorites,
   getListingWithMessages,
-  getListingOwner
+  getListingOwner,
+  getListingTypePercentages,
 };
