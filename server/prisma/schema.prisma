@@ -7,189 +7,184 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ActionType {
-  sell
-  swap
-  donate
+model favorites {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  listing_id Int?
+  created_at DateTime? @default(now()) @db.Timestamp(6)
+  listings   listings? @relation(fields: [listing_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, listing_id])
+  @@index([listing_id], map: "idx_favorites_listing_id")
+  @@index([user_id], map: "idx_favorites_user_id")
 }
 
-enum ListingCategory {
-  yarn
-  notion
-  finished_object
-}
-
-enum Quality {
-  new        @map("new")
-  good       @map("good")
-  fair       @map("fair")
-  well_loved @map("well-loved")
-}
-
-enum RatingRole {
-  buyer
-  seller
-}
-
-model User {
-  id              Int              @id @default(autoincrement())
-  name            String           @db.VarChar(100)
-  email           String           @unique @db.VarChar(255)
-  password        String           @db.Text
-  profile_pic     String?          @db.Text
-  location        String?          @db.VarChar(100)
-  created_at      DateTime         @default(now())
-  yarns           Yarn[]
-  notions         Notion[]
-  finishedObjects FinishedObject[]
-  listings        Listing[]        @relation("SellerListings")
-  buyerThreads    MsgThread[]      @relation("BuyerThreads")
-  sellerThreads   MsgThread[]      @relation("SellerThreads")
-  messages        Message[]        @relation("SenderMessages")
-  ordersBought    Order[]          @relation("BuyerOrders")
-  ordersSold      Order[]          @relation("SellerOrders")
-  reviewsGiven    Rating[]         @relation("seller")
-  reviewsReceived Rating[]         @relation("buyer")
-  favorites       Favorite[]
-}
-
-model Yarn {
-  id            Int          @id @default(autoincrement())
-  pictures      String[]     @db.Text
-  brand         String?      @db.VarChar(100)
-  amount        Int?
-  length_yards  Int?         @map("length_yards")
-  length_meters Int?         @map("length_meters")
-  weight        String?      @db.VarChar(50)
-  color         String?      @db.VarChar(100)
-  composition   String?      @db.VarChar(50)
-  quality       Quality?
-  type          ActionType?
-  price         Decimal?     @db.Decimal(10,2)
-  location      String?      @db.VarChar(100)
-  needle_size   String?      @db.VarChar(25)
-  hook_size     String?      @db.VarChar(25)
-  user          User?        @relation(fields: [user_id], references: [id])
-  user_id       Int?
-  description   String?      @db.Text
-  created_at    DateTime     @default(now())
-}
-
-model Notion {
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model finished_objects {
   id          Int       @id @default(autoincrement())
-  pictures    String[]  @db.Text
-  name        String?   @db.VarChar(100)
-  quantity    Int?
-  quality     Quality?
-  type        ActionType?
-  price       Decimal?  @db.Decimal(10,2)
-  location    String?   @db.VarChar(100)
-  user        User?     @relation(fields: [user_id], references: [id])
-  user_id     Int?
-  description String?   @db.Text
-  created_at  DateTime  @default(now())
-}
-
-model FinishedObject {
-  id          Int       @id @default(autoincrement())
-  pictures    String[]  @db.Text
+  pictures    String[]
   name        String?   @db.VarChar(100)
   size        String?   @db.VarChar(50)
-  quality     Quality?
-  type        ActionType?
-  price       Decimal?  @db.Decimal(10,2)
+  quality     String?   @db.VarChar(20)
+  type        String?   @db.VarChar(20)
+  price       Decimal?  @db.Decimal(10, 2)
   location    String?   @db.VarChar(100)
-  user        User?     @relation(fields: [user_id], references: [id])
   user_id     Int?
-  description String?   @db.Text
-  created_at  DateTime  @default(now())
+  description String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-model Listing {
-  id           Int             @id @default(autoincrement())
-  seller       User            @relation("SellerListings", fields: [seller_id], references: [id])
-  seller_id    Int
-  listing_type ListingCategory
-  product_id   Int
-  status       String          @default("available")
-  created_at   DateTime        @default(now())
-  threads      MsgThread[]
-  orders       Order[]
-  favorites    Favorite[]
-  listingTags  ListingTag[]
-}
+model listing_tags {
+  id         Int       @id @default(autoincrement())
+  listing_id Int?
+  tag_id     Int?
+  listings   listings? @relation(fields: [listing_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  tags       tags?     @relation(fields: [tag_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
-model MsgThread {
-  id          Int       @id @default(autoincrement())
-  buyer       User      @relation("BuyerThreads", fields: [buyer_id], references: [id])
-  buyer_id    Int
-  seller      User      @relation("SellerThreads", fields: [seller_id], references: [id])
-  seller_id   Int
-  listing     Listing   @relation(fields: [listing_id], references: [id])
-  listing_id  Int
-  created_at  DateTime  @default(now())
-  messages    Message[]
-}
-
-model Message {
-  id               Int       @id @default(autoincrement())
-  conversation     MsgThread @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
-  conversation_id  Int       @map("conversation_id")
-  sender           User      @relation("SenderMessages", fields: [sender_id], references: [id])
-  sender_id        Int       @map("sender_id")
-  text             String
-  created_at       DateTime  @default(now())
- }
-
-model Order {
-  id           Int      @id @default(autoincrement())
-  listing      Listing  @relation(fields: [listing_id], references: [id])
-  listing_id   Int
-  buyer        User     @relation("BuyerOrders", fields: [buyer_id], references: [id])
-  buyer_id     Int
-  seller       User     @relation("SellerOrders", fields: [seller_id], references: [id])
-  seller_id    Int
-  final_price  Decimal  @db.Decimal(10,2)
-  created_at   DateTime @default(now())
-  ratings      Rating[]
-}
-
-model Rating {
-  id           Int        @id @default(autoincrement())
-  seller     User       @relation("seller", fields: [seller_id], references: [id])
-  seller_id  Int
-  buyer     User       @relation("buyer", fields: [buyer_id], references: [id])
-  buyer_id  Int
-  role         RatingRole
-  stars        Int
-  review       String?
-  order        Order      @relation(fields: [order_id], references: [id])
-  order_id     Int
-  created_at   DateTime   @default(now())
-  @@unique([seller_id, buyer_id, order_id])
-}
-
-model Favorite {
-  id           Int      @id @default(autoincrement())
-  user         User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id      Int
-  listing      Listing  @relation(fields: [listing_id], references: [id], onDelete: Cascade)
-  listing_id   Int
-  created_at   DateTime @default(now())
-  @@unique([user_id, listing_id])
-}
-
-model Tag {
-  id          Int           @id @default(autoincrement())
-  name        String        @unique @db.VarChar(50)
-  listingTags ListingTag[]
-}
-
-model ListingTag {
-  id          Int       @id @default(autoincrement())
-  listing     Listing   @relation(fields: [listing_id], references: [id], onDelete: Cascade)
-  listing_id  Int
-  tag         Tag       @relation(fields: [tag_id], references: [id], onDelete: Cascade)
-  tag_id      Int
   @@unique([listing_id, tag_id])
+  @@index([listing_id], map: "idx_listing_tags_listing_id")
+  @@index([tag_id], map: "idx_listing_tags_tag_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model listings {
+  id           Int            @id @default(autoincrement())
+  seller_id    Int?
+  listing_type String?        @db.VarChar(20)
+  product_id   Int
+  status       String?        @default("available") @db.VarChar(20)
+  created_at   DateTime?      @default(now()) @db.Timestamp(6)
+  favorites    favorites[]
+  listing_tags listing_tags[]
+  users        users?         @relation(fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  msg_thread   msg_thread[]
+  orders       orders[]
+
+  @@index([product_id], map: "idx_listings_product_id")
+  @@index([seller_id], map: "idx_listings_seller_id")
+}
+
+model messages {
+  id              Int         @id @default(autoincrement())
+  conversation_id Int?
+  sender_id       Int?
+  text            String
+  created_at      DateTime?   @default(now()) @db.Timestamp(6)
+  msg_thread      msg_thread? @relation(fields: [conversation_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           users?      @relation(fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([conversation_id], map: "idx_messages_conversation_id")
+}
+
+model msg_thread {
+  id                                Int        @id @default(autoincrement())
+  buyer_id                          Int?
+  seller_id                         Int?
+  listing_id                        Int?
+  created_at                        DateTime?  @default(now()) @db.Timestamp(6)
+  messages                          messages[]
+  users_msg_thread_buyer_idTousers  users?     @relation("msg_thread_buyer_idTousers", fields: [buyer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listings                          listings?  @relation(fields: [listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_msg_thread_seller_idTousers users?     @relation("msg_thread_seller_idTousers", fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model notions {
+  id          Int       @id @default(autoincrement())
+  pictures    String[]
+  name        String?   @db.VarChar(100)
+  quantity    Int?
+  quality     String?   @db.VarChar(20)
+  type        String?   @db.VarChar(20)
+  price       Decimal?  @db.Decimal(10, 2)
+  location    String?   @db.VarChar(100)
+  user_id     Int?
+  description String?
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model orders {
+  id                            Int       @id @default(autoincrement())
+  listing_id                    Int?
+  buyer_id                      Int?
+  seller_id                     Int?
+  final_price                   Decimal?  @db.Decimal(10, 2)
+  created_at                    DateTime? @default(now()) @db.Timestamp(6)
+  users_orders_buyer_idTousers  users?    @relation("orders_buyer_idTousers", fields: [buyer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  listings                      listings? @relation(fields: [listing_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_orders_seller_idTousers users?    @relation("orders_seller_idTousers", fields: [seller_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ratings                       ratings[]
+
+  @@index([buyer_id], map: "idx_orders_buyer_id")
+  @@index([seller_id], map: "idx_orders_seller_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model ratings {
+  id                               Int       @id @default(autoincrement())
+  reviewer_id                      Int?
+  reviewee_id                      Int?
+  role                             String?   @db.VarChar(10)
+  stars                            Int?
+  review                           String?
+  order_id                         Int?
+  created_at                       DateTime? @default(now()) @db.Timestamp(6)
+  orders                           orders?   @relation(fields: [order_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_ratings_reviewee_idTousers users?    @relation("ratings_reviewee_idTousers", fields: [reviewee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users_ratings_reviewer_idTousers users?    @relation("ratings_reviewer_idTousers", fields: [reviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([reviewer_id, reviewee_id, order_id])
+  @@index([reviewee_id], map: "idx_ratings_reviewee_id")
+}
+
+model tags {
+  id           Int            @id @default(autoincrement())
+  name         String         @unique @db.VarChar(50)
+  listing_tags listing_tags[]
+}
+
+model users {
+  id                                     Int                @id @default(autoincrement())
+  name                                   String             @db.VarChar(100)
+  email                                  String             @unique @db.VarChar(255)
+  password                               String
+  profile_pic                            String?
+  location                               String?            @db.VarChar(100)
+  created_at                             DateTime?          @default(now()) @db.Timestamp(6)
+  favorites                              favorites[]
+  finished_objects                       finished_objects[]
+  listings                               listings[]
+  messages                               messages[]
+  msg_thread_msg_thread_buyer_idTousers  msg_thread[]       @relation("msg_thread_buyer_idTousers")
+  msg_thread_msg_thread_seller_idTousers msg_thread[]       @relation("msg_thread_seller_idTousers")
+  notions                                notions[]
+  orders_orders_buyer_idTousers          orders[]           @relation("orders_buyer_idTousers")
+  orders_orders_seller_idTousers         orders[]           @relation("orders_seller_idTousers")
+  ratings_ratings_reviewee_idTousers     ratings[]          @relation("ratings_reviewee_idTousers")
+  ratings_ratings_reviewer_idTousers     ratings[]          @relation("ratings_reviewer_idTousers")
+  yarn                                   yarn[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model yarn {
+  id            Int       @id @default(autoincrement())
+  pictures      String[]
+  brand         String?   @db.VarChar(100)
+  amount        Int?
+  length_yards  Int?
+  length_meters Int?
+  weight        String?   @db.VarChar(50)
+  color         String?   @db.VarChar(100)
+  composition   String?
+  quality       String?   @db.VarChar(20)
+  type          String?   @db.VarChar(20)
+  price         Decimal?  @db.Decimal(10, 2)
+  location      String?   @db.VarChar(100)
+  user_id       Int?
+  description   String?
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  users         users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

@@ -1,36 +1,42 @@
 /** Express + API Route Functions */
 
 // Express Imports:
-   // const express = require("express");
-  // const apiRouter = express.Router();
+   const express = require("express");
+  const apiRouter = express.Router();
 
 // JSON parser:
-  // apiRouter.use(express.json());
+  apiRouter.use(express.json());
 
 // Routes for api requests (each file needs it's own defined path):
 // File declararion:
-  // const admin = require("./admin")
+  const favorites = require("./favorites")
 // Route declaration: 
-  // apiRouter.use("/admins", admin)
+  apiRouter.use("/favorites", favorites)
 
-  // const art = require("./art")
-  // apiRouter.use("/pieces", art)
+  const finishedObjects = require("./finished-objects")
+  apiRouter.use("/finished-objects", finishedObjects)
 
-  // const contact = require("./contact")
-  // apiRouter.use("/contact", contact)
+  const listings = require("./listings")
+  apiRouter.use("/listings", listings)
 
-  // const projects = require("./projects")
-  // apiRouter.use("/projects", projects)
+  const notions = require("./notions")
+  apiRouter.use("/notions", notions)
 
-  // const tags = require("./tags")
-  // apiRouter.use("/tags", tags)
+  const ratings = require("./ratings")
+  apiRouter.use("/ratings", ratings)
 
-  // const markers = require("./markers")
-  // apiRouter.use("/markers", markers)
+  const tags = require("./tags")
+  apiRouter.use("/tags", tags)
+
+  const users = require("./users")
+  apiRouter.use("/users", users)
+
+  const yarn = require("./yarn")
+  apiRouter.use("/yarn", yarn)
 
 // Exporting express router to the various api files:
 
-    // module.exports = apiRouter
+    module.exports = apiRouter
 
 
 // You need this at the top of the api pages: 
