@@ -7,6 +7,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum ActionType {
+  sell
+  swap
+  donate
+}
+
+enum ListingCategory {
+  yarn
+  notion
+  finished_object
+}
+
+enum Quality {
+  new        @map("new")
+  good       @map("good")
+  fair       @map("fair")
+  well_loved @map("well-loved")
+}
+
+enum RatingRole {
+  buyer
+  seller
+ }
+ 
 model favorites {
   id         Int       @id @default(autoincrement())
   user_id    Int?
