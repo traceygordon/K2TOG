@@ -154,3 +154,16 @@ const deleteRating = async (ratingId) => {
     throw error;
   }
 };
+
+module.exports = {
+  createRating,
+  getRatingById,
+  getRatingsForOrder,
+  getRatingsBySeller,
+  getRatingsByBuyer,
+  checkIfRatingExists,
+  getAverageRatingForUser,
+  getRatingStats,
+  updateRating,
+  deleteRating,
+};
