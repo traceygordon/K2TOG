@@ -358,7 +358,7 @@ async function auditTagUsage(tagId, includeListings = false) {
 
 
 // Stats Function for Finding the Most Utilized Tag (Max Set to 10):
-/** Params: # =limist (number of top tags to return) */
+/** Params: # =limit (number of top tags to return) */
 async function getTopTags(limit = 10) {
   try {
     const { rows } = await client.query(
