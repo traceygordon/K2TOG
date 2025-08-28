@@ -263,6 +263,7 @@ apiRouter.get("/", async (req, res, next) => {
 
 /** Data Routes */
 // Get listings organized by type:
+       // Check why this is "listingId"
 apiRouter.get("/", async (req, res, next) => {
   try {
     res.send(await getListingWithProduct(req.params.listingId));
@@ -289,6 +290,7 @@ apiRouter.get("/", async (req, res, next) => {
   }
 });
 // Get all listings by an owner:
+     // Check why this is "listingId"
 apiRouter.get("/", async (req, res, next) => {
   try {
     res.send(

@@ -24,7 +24,7 @@ apiRouter.get("/", async (res, next) => {
     next(ex);
   }
 });
-// Get Pieces by TagName:
+// Get Listings by TagName:
 apiRouter.get("/:tagName/listings", async (req, res, next) => {
   let { tagName } = req.params;
   // console.log("Inside api router:", tagName);
@@ -39,7 +39,7 @@ apiRouter.get("/:tagName/listings", async (req, res, next) => {
     next(ex);
   }
 });
-// Get Pieces by TagName:
+// Get Listings by TagId:
 apiRouter.get("/:tagId/listings", async (req, res, next) => {
   try {
     let result = await getListingsByTagId(req.params.tagId);
